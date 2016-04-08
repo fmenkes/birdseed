@@ -2,15 +2,19 @@
   "name": "server",
   "version": "1.0.0",
   "description": "Budget app server using MongoDB and Express.",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "test": "mocha",
+    "prestart": "npm test",
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chai": "^3.5.0",
     "express": "^4.13.4",
-    "mongoose": "^4.4.11"
+    "mocha": "^2.4.5",
+    "mongoose": "^4.4.11",
+    "mongoose-type-email": "^1.0.2"
   }
 }

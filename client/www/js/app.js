@@ -1,9 +1,31 @@
-// Ionic Starter App
+// Angular app
+angular.module('client', ['ionic'])
 
-// angular.module is a global place for creating, registering and retrieving Angular modules
-// 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
-// the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic'])
+.config(function($stateProvider, $urlRouterProvider) {
+  $stateProvider
+  .state('outside', {
+    url: '/outside',
+    abstract: true,
+    templateUrl: 'templates/outside.html'
+  })
+  .state('outside.login', {
+    url: '/login',
+    templateUrl: 'templates/login.html',
+    controller: 'LoginCtrl'
+  })
+  .state('inside', {
+    url: '/inside',
+    abstract: true,
+    templateUrl: 'templates/inside.html'
+  })
+  .state('inside.main', {
+    url: '/main',
+    templateUrl: 'templates/main.html',
+    controller: 'MainCtrl'
+  });
+
+  $urlRouterProvider.otherwise('/outside/login');
+})
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {

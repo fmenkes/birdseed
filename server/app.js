@@ -3,14 +3,19 @@ var express  = require('express'),
     database = require('./config/database'),
     app      = express();
 
-require('./models/Test');
 
-database.connect();
+require('./models/Test');
 
 var Test = mongoose.model('Test');
 
-Test.create({ hello: 'hello', world: 'world' }, function(err, hello) {
-  if(err) console.log("Error creating test doc: " + err);
+database.connect(function(code, err) {
+  if(err) throw err;
+
+  if(code === 1) console.log('Connection established.');
+
+  Test.create({ hello: 'hello', world: 'world' }, function(err, hello) {
+    if(err) console.log("Error creating test doc: " + err);
+  });
 });
 
 app.get('/', function(req, res) {
