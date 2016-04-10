@@ -1,7 +1,8 @@
 var express  = require('express'),
     mongoose = require('mongoose'),
     database = require('./config/database'),
-    app      = express();
+    app      = express(),
+    port     = process.env.PORT || 8080;
 
 
 require('./models/Test');
@@ -26,6 +27,6 @@ app.get('/', function(req, res) {
   });
 });
 
-app.listen(8080, function() {
-  console.log("Server listening on port 8080.");
+app.listen(port, function() {
+  console.log("Server listening on port " + port + ".");
 });
