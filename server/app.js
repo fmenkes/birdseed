@@ -2,30 +2,20 @@ var express  = require('express'),
     mongoose = require('mongoose'),
     database = require('./config/database'),
     app      = express(),
-    port     = process.env.PORT || 8080;
-
-
-require('./models/Test');
-
-var Test = mongoose.model('Test');
+    port     = process.env.PORT || 8080,
+    // TODO: dynamic loading of models
+    Test     = require('./models/Test');
 
 database.connect(function(code, err) {
   if(err) throw err;
 
-  if(code === 1) console.log('Connection established.');
-
-  Test.create({ hello: 'hello', world: 'world' }, function(err, hello) {
-    if(err) console.log("Error creating test doc: " + err);
-  });
+  if(code === 1) console.log('Database connection established.');
 });
 
-app.get('/', function(req, res) {
-  Test.findOne(function(err, doc) {
-    if(err) console.log("Error loading test doc: " + err);
+// Initialize router here to avoid database problems
+var router = require('./config/router');
 
-    res.send(doc.hello + " " + doc.world + "!");
-  });
-});
+app.use('/', router);
 
 app.listen(port, function() {
   console.log("Server listening on port " + port + ".");
