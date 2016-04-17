@@ -17,6 +17,10 @@ angular.module('client')
       });
     });
   };
+
+  $scope.test = function() {
+    $scope.testText = "test";
+  };
 })
 
 .controller('RegisterCtrl', function($scope, AuthService, $ionicPopup, $state) {

@@ -60,8 +60,8 @@ angular.module('client', ['ionic', 'ngCordova'])
       StatusBar.styleDefault();
     }
 
-    // local database for tokens.
-    var db = $cordovaSQLite.openDB("local.db");
-    $cordovaSQLite.execute(db, "CREATE TABLE IF NOT EXISTS tokens (id integer primary key, token text)");
+    // local database for tokens. Commented out because it will cause e2e tests to fail.
+    /*var db = $cordovaSQLite.openDB("local.db");
+    $cordovaSQLite.execute(db, "CREATE TABLE IF NOT EXISTS tokens (id integer primary key, token text)");*/
   });
 });
