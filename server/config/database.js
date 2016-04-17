@@ -16,6 +16,7 @@ var options = {
 
 var mongodbUri = 'mongodb://ds015710.mlab.com:15710/1dv430';
 
+// Connect to local database for testing purposes.
 module.exports.connectToLocalDatabase = function(callback) {
   mongoose.connect('mongodb://localhost:27017/budgetbuddy');
 
