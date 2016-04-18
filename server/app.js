@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 database.connect(function(code, err) {
+  // TODO: don't crash the server if connection is lost!
   if(err) throw err;
 
   if(code === 1) console.log('Database connection established.');

@@ -9,7 +9,7 @@ var secret = require('./keys').secret;
 module.exports = function(passport) {
   var options = {
     secretOrKey: secret,
-    jwtFromRequest: ExtractJwt.fromBodyField('x-www-form-urlencoded')
+    jwtFromRequest: ExtractJwt.fromAuthHeader()
   };
 
   passport.use(new JwtStrategy(options, function(jwt_payload, done) {

@@ -27,6 +27,11 @@ angular.module('client', ['ionic', 'ngCordova'])
     url: '/main',
     templateUrl: 'templates/main.html',
     controller: 'MainCtrl'
+  })
+  .state('inside.budget', {
+    url: '/budget',
+    templateUrl: 'templates/budget.html',
+    controller: 'BudgetCtrl'
   });
 
   $urlRouterProvider.otherwise('/outside/login');

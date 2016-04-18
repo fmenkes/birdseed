@@ -22,7 +22,14 @@ var User = new Schema({
     type: mongoose.SchemaTypes.Email,
     required: true,
     unique: true
-  }
+  },
+  budgets: [
+    {
+      name: String,
+      income: Number,
+      expenditure: Number
+    }
+  ]
 });
 
 User.pre('save', function (next) {

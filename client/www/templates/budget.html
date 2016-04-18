@@ -1,0 +1,12 @@
+<ion-view title="My Budgets">
+  <ion-content class="padding">
+    <button class="button button-calm button-block" ng-click="newBudget()">
+      Create new Budget
+    </button>
+    <ul class="list">
+      <li class="item" ng-repeat="budget in budgets">
+        {{ budget.name }} <span style="color:green">+{{ budget.income }}</span> <span style="color:red">-{{ budget.expenditure }}</span>
+      </li>
+    </ul>
+  </ion-content>
+</ion-view>

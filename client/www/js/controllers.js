@@ -54,6 +54,29 @@ angular.module('client')
 
 })
 
+.controller('BudgetCtrl', function($scope, $http, API_ENDPOINT) {
+  $scope.budgets = [];
+
+  //TODO: automatic update of budgets in list
+  var update = function() {
+    $http.get(API_ENDPOINT.url + '/budgets').then(function(result) {
+      $scope.budgets = result.data.budgets;
+    }, function(errMsg) {
+      console.log(errMsg);
+    });
+  };
+
+  update();
+
+  $scope.newBudget = function() {
+    $http.post(API_ENDPOINT.url + '/budgets').then(function(result) {
+      update();
+    }, function(errMsg) {
+      console.log(errMsg);
+    });
+  };
+})
+
 .controller('AppCtrl', function($scope, $state, $ionicPopup, AuthService, AUTH_EVENTS) {
   $scope.$on(AUTH_EVENTS.notAuthenticated, function(event) {
     AuthService.logout();
