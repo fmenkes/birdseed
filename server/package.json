@@ -4,9 +4,8 @@
   "description": "Budget app server using MongoDB and Express.",
   "main": "app.js",
   "scripts": {
-    "test": "mocha",
-    "prestart": "npm test",
-    "start": "nodemon app.js"
+    "test": "NODE_ENV=testing mocha test/test.js test/APIspec.js",
+    "start": "NODE_ENV=development nodemon app.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +20,7 @@
     "mongoose": "^4.4.11",
     "mongoose-type-email": "^1.0.2",
     "passport": "^0.3.2",
-    "passport-jwt": "^2.0.0"
+    "passport-jwt": "^2.0.0",
+    "supertest": "^1.2.0"
   }
 }

@@ -13,19 +13,29 @@ app.use(bodyParser.json());
 
 app.use(passport.initialize());
 
-database.connect(function(code, err) {
-  // TODO: don't crash the server if connection is lost!
-  if(err) throw err;
-
-  if(code === 1) console.log('Database connection established.');
-});
-
-// Initialize router and passport here to avoid database problems
 var router = require('./config/router');
 require('./config/passport')(passport);
 
 app.use('/', router);
 
-app.listen(port, function() {
-  console.log("Server listening on port " + port + ".");
-});
+function connect(callback) {
+  database.connect(function(code, err) {
+    // TODO: don't crash the server if connection is lost!
+    if(err) throw err;
+
+    if(code === 1) console.log('Database connection established.');
+
+    app.listen(port, function() {
+      console.log("Server listening on port " + port + ".");
+      if(callback) callback(app);
+    });
+  });
+}
+
+if(process.env.NODE_ENV !== 'testing')
+  connect();
+else {
+  module.exports = function(callback) {
+    connect(callback);
+  };
+}
