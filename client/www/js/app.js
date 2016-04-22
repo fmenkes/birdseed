@@ -3,6 +3,11 @@ angular.module('client', ['ionic', 'ngCordova'])
 
 .config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
+  // Loading page.
+  .state('home', {
+    url: '/home',
+    templateUrl: 'templates/home.html'
+  })
   .state('outside', {
     url: '/outside',
     abstract: true,
@@ -21,7 +26,8 @@ angular.module('client', ['ionic', 'ngCordova'])
   .state('inside', {
     url: '/inside',
     abstract: true,
-    templateUrl: 'templates/inside.html'
+    templateUrl: 'templates/inside.html',
+    controller: 'InsideCtrl'
   })
   .state('inside.main', {
     url: '/main',
@@ -34,17 +40,21 @@ angular.module('client', ['ionic', 'ngCordova'])
     controller: 'BudgetCtrl'
   });
 
-  $urlRouterProvider.otherwise('/outside/login');
+  $urlRouterProvider.otherwise('/home');
 })
 
-.run(function($ionicPlatform, $rootScope, $state, $cordovaSQLite, AuthService, AUTH_EVENTS) {
+.run(function($ionicPlatform, $ionicHistory, $rootScope, $state, $timeout, $location, $cordovaSQLite, AuthService, AUTH_EVENTS) {
   // Detect when user tries to somehow navigate to a restricted area while logged out
-  // and redirected them to the login page.
+  // and redirect them to the login page.
   $rootScope.$on('$stateChangeStart', function(event, next, nextParams, fromState) {
     if(!AuthService.isAuthenticated()) {
       console.log(next.name);
-      if(next.name !== 'outside.login' && next.name !== 'outside.register') {
+      if(next.name !== 'outside.login' && next.name !== 'outside.register' && next.name !== 'home') {
         event.preventDefault();
+        $ionicHistory.nextViewOptions({
+          disableBack: true,
+          disableAnimate: true
+        });
         $state.go('outside.login');
       }
     }
@@ -65,8 +75,24 @@ angular.module('client', ['ionic', 'ngCordova'])
       StatusBar.styleDefault();
     }
 
-    // local database for tokens. Commented out because it will cause e2e tests to fail.
-    /*var db = $cordovaSQLite.openDB("local.db");
-    $cordovaSQLite.execute(db, "CREATE TABLE IF NOT EXISTS tokens (id integer primary key, token text)");*/
+    // local database for tokens. If not commented out, protractor tests will fail
+    // TODO: make separate dbs for testing and dev purposes
+    var db = $cordovaSQLite.openDB({ name: "local.db", location: 'default' });
+    db.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
+
+    console.log(AuthService.isAuthenticated());
+
+    if (AuthService.isAuthenticated()) {
+      $timeout(function() {
+        $location.path('/inside/main');
+        $rootScope.$apply();
+      });
+    }
+    else {
+      $timeout(function() {
+        $location.path('/outside/login');
+        $rootScope.$apply();
+      });
+    }
   });
 });

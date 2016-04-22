@@ -1,6 +1,6 @@
 angular.module('client')
 
-.controller('LoginCtrl', function($scope, AuthService, $ionicPopup, $state) {
+.controller('LoginCtrl', function($scope, AuthService, $ionicPopup, $ionicHistory, $state) {
   $scope.user = {
     username: '',
     email: '',
@@ -9,6 +9,10 @@ angular.module('client')
 
   $scope.login = function() {
     AuthService.login($scope.user).then(function(msg) {
+      $ionicHistory.nextViewOptions({
+        disableBack: true,
+        disableAnimate: true
+      });
       $state.go('inside.main');
     }, function(errMsg) {
       var alertPopup = $ionicPopup.alert({
@@ -50,6 +54,17 @@ angular.module('client')
   };
 })
 
+.controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $state) {
+  $scope.logout = function() {
+    AuthService.logout();
+    $ionicHistory.nextViewOptions({
+      disableBack: true,
+      disableAnimate: true
+    });
+    $state.go('outside.login');
+  };
+})
+
 .controller('MainCtrl', function() {
 
 })
@@ -57,7 +72,7 @@ angular.module('client')
 .controller('BudgetCtrl', function($scope, $http, API_ENDPOINT) {
   $scope.budgets = [];
 
-  //TODO: automatic update of budgets in list
+  //TODO: change this all to SQL
   var update = function() {
     $http.get(API_ENDPOINT.url + '/budgets').then(function(result) {
       $scope.budgets = result.data.budgets;
