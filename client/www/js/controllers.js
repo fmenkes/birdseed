@@ -69,16 +69,40 @@ angular.module('client')
 
 })
 
-.controller('BudgetCtrl', function($scope, $http, DB, API_ENDPOINT) {
+.controller('BudgetCtrl', function($scope, $ionicPopup, DB, API_ENDPOINT) {
   // TODO: lots of room for optimization
   $scope.budgets = [];
 
   $scope.newBudget = function() {
-    var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
-    var args = ['Budget', 10000, 5000];
+    $scope.budget = {};
 
-    DB.query(query, args).then(function() {
-      update();
+    var namePopup = $ionicPopup.show({
+      title: 'New Budget',
+      template: '<input type="text" ng-model="budget.name">',
+      scope: $scope,
+      buttons: [
+        { text: 'Cancel' },
+        { text: 'Save',
+          onTap: function(e) {
+            if(!$scope.budget.name) {
+              e.preventDefault();
+            } else {
+              return $scope.budget.name;
+            }
+          }
+        }
+      ]
+    });
+
+    namePopup.then(function(name) {
+      if(!name) return;
+
+      var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
+      var args = [name, 10000, 5000];
+
+      DB.query(query, args).then(function() {
+        update();
+      });
     });
   };
 

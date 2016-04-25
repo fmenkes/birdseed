@@ -38,6 +38,10 @@ angular.module('client', ['ionic', 'ngCordova'])
     url: '/budget',
     templateUrl: 'templates/budget.html',
     controller: 'BudgetCtrl'
+  })
+  .state('inside.trophies', {
+    url: '/trophies',
+    templateUrl: 'templates/trophies.html'
   });
 
   $urlRouterProvider.otherwise('/home');
