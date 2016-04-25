@@ -43,7 +43,18 @@ angular.module('client', ['ionic', 'ngCordova'])
   $urlRouterProvider.otherwise('/home');
 })
 
-.run(function($ionicPlatform, $ionicHistory, $rootScope, $state, $timeout, $location, $cordovaSQLite, AuthService, AUTH_EVENTS) {
+.run(function($ionicPlatform,
+              $ionicHistory,
+              $rootScope,
+              $state,
+              $timeout,
+              $location,
+              $cordovaSQLite,
+              DB,
+              AuthService,
+              API_ENDPOINT_URL,
+              API_ENDPOINT,
+              AUTH_EVENTS) {
   // Detect when user tries to somehow navigate to a restricted area while logged out
   // and redirect them to the login page.
   $rootScope.$on('$stateChangeStart', function(event, next, nextParams, fromState) {
@@ -75,12 +86,15 @@ angular.module('client', ['ionic', 'ngCordova'])
       StatusBar.styleDefault();
     }
 
-    // local database for tokens. If not commented out, protractor tests will fail
-    // TODO: make separate dbs for testing and dev purposes
-    var db = $cordovaSQLite.openDB({ name: "local.db", location: 'default' });
-    db.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
+    // Set the API endpoint depending on if we're on mobile or browser
+    if(ionic.Platform.isAndroid() || ionic.Platform.isIOS()) {
+      API_ENDPOINT.url = API_ENDPOINT_URL.mobile;
+    } else {
+      API_ENDPOINT.url = API_ENDPOINT_URL.browser;
+    }
 
-    console.log(AuthService.isAuthenticated());
+    DB.init();
+    AuthService.loadUserCredentials();
 
     if (AuthService.isAuthenticated()) {
       $timeout(function() {

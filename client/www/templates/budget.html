@@ -3,6 +3,9 @@
     <button class="button button-calm button-block" ng-click="newBudget()">
       Create new Budget
     </button>
+    <button class="button button-calm button-block" ng-click="deleteBudgets()">
+      Delete all budgets
+    </button>
     <ul class="list">
       <li class="item" ng-repeat="budget in budgets">
         {{ budget.name }} <span style="color:green">+{{ budget.income }}</span> <span style="color:red">-{{ budget.expenditure }}</span>

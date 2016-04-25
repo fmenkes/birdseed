@@ -2,32 +2,102 @@
 
 angular.module('client')
 
-.service('AuthService', function($q, $http, $cordovaSQLite, $ionicPlatform, API_ENDPOINT) {
+// TODO: rewrite this as a wrapper with all db functions
+.factory('DB', function($q, $cordovaSQLite, $ionicPlatform) {
+  var db;
+
+  this.init = function() {
+    if(window.cordova) {
+      // App syntax
+      db = $cordovaSQLite.openDB({ name: "local.db", location: "default" });
+    } else {
+      // Ionic serve syntax
+      db = window.openDatabase("local.db", "1.0", "Local Database", 10000);
+    }
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS budgets (name TEXT, income INTEGER, expenditure INTEGER)');
+    });
+  };
+
+  // AuthToken function
+  this.insertToken = function(token) {
+    var query = 'INSERT INTO tokens (token) SELECT ? WHERE NOT EXISTS (SELECT * FROM tokens)';
+    var args = [token];
+
+    return this.query(query, args).then(function(result) {
+      return result.insertId;
+    });
+  };
+
+  this.findToken = function() {
+    var query = 'SELECT * FROM tokens';
+    var args = [];
+
+    return this.query(query, args).then(function(result) {
+      return result.rows.item(0);
+    });
+  };
+
+  this.deleteToken = function() {
+    var query = 'DELETE FROM tokens';
+    var args = [];
+
+    return this.query(query, args);
+  };
+
+  this.getAll = function(table) {
+    var query = 'SELECT * FROM ' + table;
+    var args = [];
+    var deferred = $q.defer();
+
+    db.transaction(function(tx) {
+      tx.executeSql(query, args, function(tx, result) {
+        var output = [];
+
+        for(var i = 0; i < result.rows.length; i++) {
+          output.push(result.rows.item(i));
+        }
+
+        console.log(result, output);
+
+        deferred.resolve(output);
+      }, function(err) {
+        deferred.reject(console.log(err.message));
+      });
+    });
+
+    return deferred.promise;
+  };
+
+  this.query = function(query, args) {
+    args = args || [];
+    var deferred = $q.defer();
+
+    db.transaction(function(tx) {
+      tx.executeSql(query, args, function(tx, result) {
+        deferred.resolve(result);
+      }, function(tx, err) {
+        deferred.reject(err);
+      });
+    });
+
+    return deferred.promise;
+  };
+
+  return this;
+})
+
+// TODO: create AuthDB service
+
+.service('AuthService', function($q, $http, DB, $ionicPlatform, API_ENDPOINT) {
   var LOCAL_TOKEN_KEY = 'yourTokenKey';
   var isAuthenticated = false;
   var authToken;
-  var db;
-
-
-  function loadUserCredentials() {
-    // TODO: Store token in localStorage for now. Migrate to SQLite later
-    // TODO: refine sql query
-    var token = window.localStorage.getItem(LOCAL_TOKEN_KEY);
-    db.executeSql('SELECT * FROM tokens', [], function(resultSet) {
-      token = resultSet.rows.item(0).token;
-    }, function(err) {
-      console.log('Error: ' + err.message);
-    });
-    if(token) {
-      console.log("User authenticated.");
-      useCredentials(token);
-    }
-  }
 
   function storeUserCredentials(token) {
-    // TODO: localStorage now, SQLite later
-    window.localStorage.setItem(LOCAL_TOKEN_KEY, token);
-    db.executeSql('INSERT INTO tokens (token) SELECT \'' + token + '\' WHERE NOT EXISTS (SELECT * FROM tokens)');
+    //window.localStorage.setItem(LOCAL_TOKEN_KEY, token);
+    DB.insertToken(token);
     useCredentials(token);
   }
 
@@ -43,10 +113,18 @@ angular.module('client')
     authToken = undefined;
     isAuthenticated = false;
     $http.defaults.headers.common.Authorization = undefined;
-    // TODO: localStorage now, SQLite later
-    window.localStorage.removeItem(LOCAL_TOKEN_KEY);
-    db.executeSql('DELETE FROM tokens');
+    //window.localStorage.removeItem(LOCAL_TOKEN_KEY);
+    DB.deleteToken();
   }
+
+  var loadUserCredentials = function() {
+    //var token = window.localStorage.getItem(LOCAL_TOKEN_KEY);
+    var token = DB.findToken();
+    if(token) {
+      console.log("User authenticated.");
+      useCredentials(token);
+    }
+  };
 
   var register = function(user) {
     return $q(function(resolve, reject) {
@@ -77,16 +155,11 @@ angular.module('client')
     destroyUserCredentials();
   };
 
-  // TODO: dbService
-  $ionicPlatform.ready(function() {
-    db = $cordovaSQLite.openDB({ name: "local.db", location: 'default' });
-    loadUserCredentials();
-  });
-
   return {
     login: login,
     register: register,
     logout: logout,
+    loadUserCredentials: loadUserCredentials,
     isAuthenticated: function() { return isAuthenticated; }
   };
 })

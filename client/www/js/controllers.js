@@ -69,27 +69,35 @@ angular.module('client')
 
 })
 
-.controller('BudgetCtrl', function($scope, $http, API_ENDPOINT) {
+.controller('BudgetCtrl', function($scope, $http, DB, API_ENDPOINT) {
+  // TODO: lots of room for optimization
   $scope.budgets = [];
 
-  //TODO: change this all to SQL
+  $scope.newBudget = function() {
+    var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
+    var args = ['Budget', 10000, 5000];
+
+    DB.query(query, args).then(function() {
+      update();
+    });
+  };
+
+  $scope.deleteBudgets = function() {
+    var query = 'DELETE FROM budgets';
+    var args = [];
+
+    DB.query(query, args).then(function() {
+      update();
+    });
+  };
+
   var update = function() {
-    $http.get(API_ENDPOINT.url + '/budgets').then(function(result) {
-      $scope.budgets = result.data.budgets;
-    }, function(errMsg) {
-      console.log(errMsg);
+    DB.getAll('budgets').then(function(budgets) {
+      $scope.budgets = budgets;
     });
   };
 
   update();
-
-  $scope.newBudget = function() {
-    $http.post(API_ENDPOINT.url + '/budgets').then(function(result) {
-      update();
-    }, function(errMsg) {
-      console.log(errMsg);
-    });
-  };
 })
 
 .controller('AppCtrl', function($scope, $state, $ionicPopup, AuthService, AUTH_EVENTS) {
