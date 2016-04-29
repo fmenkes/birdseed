@@ -5,6 +5,7 @@ var concat = require('gulp-concat');
 var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
+var protractor = require('gulp-protractor').protractor;
 var sh = require('shelljs');
 
 var paths = {
@@ -48,4 +49,14 @@ gulp.task('git-check', function(done) {
     process.exit(1);
   }
   done();
+});
+
+// This will fail in a new installation due to the selenium-standalone server
+// not being installed. Maybe worth automating for practice?
+gulp.task('test', function() {
+  gulp.src(["./test/e2e/*.js"])
+    .pipe(protractor({
+        configFile: "test/config/protractor.config.js"
+    }))
+    .on('error', function(e) { throw e; });
 });

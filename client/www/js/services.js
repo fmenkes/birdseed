@@ -20,32 +20,6 @@ angular.module('client')
     });
   };
 
-  // AuthToken function
-  this.insertToken = function(token) {
-    var query = 'INSERT INTO tokens (token) SELECT ? WHERE NOT EXISTS (SELECT * FROM tokens)';
-    var args = [token];
-
-    return this.query(query, args).then(function(result) {
-      return result.insertId;
-    });
-  };
-
-  this.findToken = function() {
-    var query = 'SELECT * FROM tokens';
-    var args = [];
-
-    return this.query(query, args).then(function(result) {
-      return result.rows.item(0);
-    });
-  };
-
-  this.deleteToken = function() {
-    var query = 'DELETE FROM tokens';
-    var args = [];
-
-    return this.query(query, args);
-  };
-
   this.getAll = function(table) {
     var query = 'SELECT * FROM ' + table;
     var args = [];
@@ -88,16 +62,79 @@ angular.module('client')
   return this;
 })
 
-// TODO: create AuthDB service
+.factory('Auth', function(DB) {
+  this.insertToken = function(token) {
+    var query = 'INSERT INTO tokens (token) SELECT ? WHERE NOT EXISTS (SELECT * FROM tokens)';
+    var args = [token];
 
-.service('AuthService', function($q, $http, DB, $ionicPlatform, API_ENDPOINT) {
-  var LOCAL_TOKEN_KEY = 'yourTokenKey';
+    return DB.query(query, args).then(function(result) {
+      return result.insertId;
+    });
+  };
+
+  this.findToken = function() {
+    var query = 'SELECT * FROM tokens';
+    var args = [];
+
+    return DB.query(query, args).then(function(result) {
+      if(result.rows.length > 0) return result.rows.item(0);
+
+      return null;
+    });
+  };
+
+  this.deleteToken = function() {
+    var query = 'DELETE FROM tokens';
+    var args = [];
+
+    return DB.query(query, args);
+  };
+
+  return this;
+})
+
+.service('BudgetingService', function($q, DB) {
+  var insertBudget = function(name) {
+    var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
+    var args = [name, 10000, 5000];
+
+    return DB.query(query, args).then(function(result) {
+      return result.insertId;
+    });
+  };
+
+  var deleteBudget = function(id) {
+    var query = 'DELETE FROM budgets WHERE id=?';
+    var args = [id];
+
+    return DB.query(query, args);
+  };
+
+  var deleteAllBudgets = function() {
+    var query = 'DELETE FROM budgets';
+    var args = [];
+
+    return DB.query(query, args);
+  };
+
+  var getAllBudgets = function() {
+    return DB.getAll('budgets');
+  };
+
+  return {
+    insert: insertBudget,
+    delete: deleteBudget,
+    getAll: getAllBudgets,
+    deleteAll: deleteAllBudgets
+  };
+})
+
+.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT) {
   var isAuthenticated = false;
   var authToken;
 
   function storeUserCredentials(token) {
-    //window.localStorage.setItem(LOCAL_TOKEN_KEY, token);
-    DB.insertToken(token);
+    Auth.insertToken(token);
     useCredentials(token);
   }
 
@@ -113,17 +150,20 @@ angular.module('client')
     authToken = undefined;
     isAuthenticated = false;
     $http.defaults.headers.common.Authorization = undefined;
-    //window.localStorage.removeItem(LOCAL_TOKEN_KEY);
-    DB.deleteToken();
+    Auth.deleteToken();
   }
 
   var loadUserCredentials = function() {
-    //var token = window.localStorage.getItem(LOCAL_TOKEN_KEY);
-    var token = DB.findToken();
-    if(token) {
-      console.log("User authenticated.");
-      useCredentials(token);
-    }
+    return $q(function(resolve, reject) {
+      Auth.findToken().then(function(token) {
+        if(token) {
+          useCredentials(token);
+          resolve("User Authenticated");
+        } else {
+          reject();
+        }
+      });
+    });
   };
 
   var register = function(user) {
@@ -132,6 +172,7 @@ angular.module('client')
         if(result.data.success) {
           resolve(result.data.msg);
         } else {
+          console.log(result.data);
           reject(result.data.msg);
         }
       });

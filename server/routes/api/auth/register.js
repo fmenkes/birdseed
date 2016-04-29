@@ -20,7 +20,10 @@ router.post('/', function(req, res) {
 
     // Save the user in the database.
     newUser.save(function(err) {
-      if(err) return res.json({ success: false, msg: err });
+      if(err) {
+        console.log(err);
+        return res.json({ success: false, msg: err.message });
+      }
 
       res.json({ success: true, msg: 'New user registered successfully.' });
     });

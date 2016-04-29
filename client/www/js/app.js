@@ -98,8 +98,18 @@ angular.module('client', ['ionic', 'ngCordova'])
     }
 
     DB.init();
-    AuthService.loadUserCredentials();
-
+    AuthService.loadUserCredentials().then(function() {
+      $timeout(function() {
+        $location.path('/inside/main');
+        $rootScope.$apply();
+      });
+    }, function() {
+      $timeout(function() {
+        $location.path('/outside/login');
+        $rootScope.$apply();
+      });
+    });
+/*
     if (AuthService.isAuthenticated()) {
       $timeout(function() {
         $location.path('/inside/main');
@@ -111,6 +121,6 @@ angular.module('client', ['ionic', 'ngCordova'])
         $location.path('/outside/login');
         $rootScope.$apply();
       });
-    }
+    }*/
   });
 });

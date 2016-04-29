@@ -65,11 +65,11 @@ angular.module('client')
   };
 })
 
-.controller('MainCtrl', function() {
+.controller('MainCtrl', function($scope) {
 
 })
 
-.controller('BudgetCtrl', function($scope, $ionicPopup, DB, API_ENDPOINT) {
+.controller('BudgetCtrl', function($scope, $ionicPopup, BudgetingService, API_ENDPOINT) {
   // TODO: lots of room for optimization
   $scope.budgets = [];
 
@@ -78,7 +78,7 @@ angular.module('client')
 
     var namePopup = $ionicPopup.show({
       title: 'New Budget',
-      template: '<input type="text" ng-model="budget.name">',
+      template: '<input id="budgetName" type="text" ng-model="budget.name">',
       scope: $scope,
       buttons: [
         { text: 'Cancel' },
@@ -97,26 +97,20 @@ angular.module('client')
     namePopup.then(function(name) {
       if(!name) return;
 
-      var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
-      var args = [name, 10000, 5000];
-
-      DB.query(query, args).then(function() {
+      BudgetingService.insert(name).then(function() {
         update();
       });
     });
   };
 
   $scope.deleteBudgets = function() {
-    var query = 'DELETE FROM budgets';
-    var args = [];
-
-    DB.query(query, args).then(function() {
+    BudgetingService.deleteAll().then(function() {
       update();
     });
   };
 
   var update = function() {
-    DB.getAll('budgets').then(function(budgets) {
+    BudgetingService.getAll().then(function(budgets) {
       $scope.budgets = budgets;
     });
   };
