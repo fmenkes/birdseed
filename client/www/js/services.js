@@ -16,7 +16,7 @@ angular.module('client')
     }
     db.transaction(function(tx) {
       tx.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
-      tx.executeSql('CREATE TABLE IF NOT EXISTS budgets (name TEXT, income INTEGER, expenditure INTEGER)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets (name TEXT, income INTEGER, expenditure INTEGER)');
     });
   };
 
@@ -93,9 +93,9 @@ angular.module('client')
   return this;
 })
 
-.service('BudgetingService', function($q, DB) {
-  var insertBudget = function(name) {
-    var query = 'INSERT INTO budgets (name, income, expenditure) VALUES (?, ?, ?)';
+.service('WalletService', function($q, DB) {
+  var insertWallet = function(name) {
+    var query = 'INSERT INTO wallets (name, income, expenditure) VALUES (?, ?, ?)';
     var args = [name, 10000, 5000];
 
     return DB.query(query, args).then(function(result) {
@@ -103,29 +103,29 @@ angular.module('client')
     });
   };
 
-  var deleteBudget = function(id) {
-    var query = 'DELETE FROM budgets WHERE id=?';
+  var deleteWallet = function(id) {
+    var query = 'DELETE FROM wallets WHERE id=?';
     var args = [id];
 
     return DB.query(query, args);
   };
 
-  var deleteAllBudgets = function() {
-    var query = 'DELETE FROM budgets';
+  var deleteAllWallets = function() {
+    var query = 'DELETE FROM wallets';
     var args = [];
 
     return DB.query(query, args);
   };
 
-  var getAllBudgets = function() {
-    return DB.getAll('budgets');
+  var getAllWallets = function() {
+    return DB.getAll('wallets');
   };
 
   return {
-    insert: insertBudget,
-    delete: deleteBudget,
-    getAll: getAllBudgets,
-    deleteAll: deleteAllBudgets
+    insert: insertWallet,
+    delete: deleteWallet,
+    getAll: getAllWallets,
+    deleteAll: deleteAllWallets
   };
 })
 
@@ -165,6 +165,8 @@ angular.module('client')
       });
     });
   };
+
+  // TODO: check if user is online
 
   var register = function(user) {
     return $q(function(resolve, reject) {

@@ -34,10 +34,10 @@ angular.module('client', ['ionic', 'ngCordova'])
     templateUrl: 'templates/main.html',
     controller: 'MainCtrl'
   })
-  .state('inside.budget', {
-    url: '/budget',
-    templateUrl: 'templates/budget.html',
-    controller: 'BudgetCtrl'
+  .state('inside.wallet', {
+    url: '/wallet',
+    templateUrl: 'templates/wallet.html',
+    controller: 'WalletCtrl'
   })
   .state('inside.trophies', {
     url: '/trophies',

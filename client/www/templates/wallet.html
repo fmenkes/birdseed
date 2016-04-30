@@ -1,0 +1,15 @@
+<ion-view title="My Wallets">
+  <ion-content class="padding">
+    <button class="button button-calm button-block" ng-click="newWallet()">
+      Create new Wallet
+    </button>
+    <button class="button button-calm button-block" ng-click="deleteWallets()">
+      Delete all Wallets
+    </button>
+    <ul class="list">
+      <li class="item" ng-repeat="wallet in wallets">
+        {{ wallet.name }} <span style="color:green">+{{ wallet.income }}</span> <span style="color:red">-{{ wallet.expenditure }}</span>
+      </li>
+    </ul>
+  </ion-content>
+</ion-view>

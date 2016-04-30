@@ -17,10 +17,12 @@ describe('login page', function() {
     expect(browser.getCurrentUrl()).not.toEqual(loginUrl);
   });
 
-  it('should create a new budget', function() {
-    element(by.buttonText('Manage my budgets')).click();
-    element(by.buttonText('Create new Budget')).click();
-    element(by.id('budgetName')).sendKeys('test');
+  it('should create a new wallet', function() {
+    // Clunky but necessary or it will find the cached version of the menu button
+    element(by.xpath("//*[@nav-bar='active']//*//div//span//button")).click();
+    element(by.cssContainingText('.item', 'Wallets')).click();
+    element(by.buttonText('Create new Wallet')).click();
+    element(by.id('walletName')).sendKeys('test');
     element(by.buttonText('Save')).click();
 
     var list = element.all(by.css('.list li'));

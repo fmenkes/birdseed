@@ -54,7 +54,7 @@ angular.module('client')
   };
 })
 
-.controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $state) {
+.controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $ionicSideMenuDelegate, $state) {
   $scope.logout = function() {
     AuthService.logout();
     $ionicHistory.nextViewOptions({
@@ -63,31 +63,35 @@ angular.module('client')
     });
     $state.go('outside.login');
   };
+
+  $scope.toggleRight = function() {
+    $ionicSideMenuDelegate.toggleRight();
+  };
 })
 
 .controller('MainCtrl', function($scope) {
 
 })
 
-.controller('BudgetCtrl', function($scope, $ionicPopup, BudgetingService, API_ENDPOINT) {
+.controller('WalletCtrl', function($scope, $ionicPopup, WalletService, API_ENDPOINT) {
   // TODO: lots of room for optimization
-  $scope.budgets = [];
+  $scope.wallets = [];
 
-  $scope.newBudget = function() {
-    $scope.budget = {};
+  $scope.newWallet = function() {
+    $scope.wallet = {};
 
     var namePopup = $ionicPopup.show({
-      title: 'New Budget',
-      template: '<input id="budgetName" type="text" ng-model="budget.name">',
+      title: 'New Wallet',
+      template: '<input id="walletName" type="text" ng-model="wallet.name">',
       scope: $scope,
       buttons: [
         { text: 'Cancel' },
         { text: 'Save',
           onTap: function(e) {
-            if(!$scope.budget.name) {
+            if(!$scope.wallet.name) {
               e.preventDefault();
             } else {
-              return $scope.budget.name;
+              return $scope.wallet.name;
             }
           }
         }
@@ -97,21 +101,21 @@ angular.module('client')
     namePopup.then(function(name) {
       if(!name) return;
 
-      BudgetingService.insert(name).then(function() {
+      WalletService.insert(name).then(function() {
         update();
       });
     });
   };
 
-  $scope.deleteBudgets = function() {
-    BudgetingService.deleteAll().then(function() {
+  $scope.deleteWallets = function() {
+    WalletService.deleteAll().then(function() {
       update();
     });
   };
 
   var update = function() {
-    BudgetingService.getAll().then(function(budgets) {
-      $scope.budgets = budgets;
+    WalletService.getAll().then(function(wallets) {
+      $scope.wallets = wallets;
     });
   };
 
