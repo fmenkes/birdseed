@@ -5,3 +5,4 @@ plugins
 /client/www/lib
 /client/www/css/ionic.app.css
 /client/www/css/ionic.app.min.css
+keys.js

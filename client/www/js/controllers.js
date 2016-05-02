@@ -73,7 +73,7 @@ angular.module('client')
 
 })
 
-.controller('WalletCtrl', function($scope, $ionicPopup, WalletService, API_ENDPOINT) {
+.controller('WalletsCtrl', function($scope, $ionicPopup, WalletService, API_ENDPOINT) {
   // TODO: lots of room for optimization
   $scope.wallets = [];
 
@@ -114,12 +114,44 @@ angular.module('client')
   };
 
   var update = function() {
-    WalletService.getAll().then(function(wallets) {
+    WalletService.find().then(function(wallets) {
       $scope.wallets = wallets;
     });
   };
 
   update();
+})
+
+.controller('NewWalletCtrl', function($scope, $state, $ionicHistory, WalletService) {
+  $scope.wallet = {
+    name: ''
+  };
+
+  $scope.saveWallet = function() {
+    var name = $scope.wallet.name;
+    var budget = $scope.wallet.budget;
+
+    if(!name || !budget) return;
+
+    WalletService.insert(name, budget).then(function() {
+      $ionicHistory.nextViewOptions({
+        disableBack: true
+      });
+      $state.go('inside.wallets');
+    });
+  };
+})
+
+.controller('WalletDetailCtrl', function($scope, $stateParams, WalletService) {
+  $scope.wallet = {
+    name: 'default',
+    budget: 0,
+    spent: 0
+  };
+
+  WalletService.findOne($stateParams.walletId).then(function(result) {
+    $scope.wallet = result;
+  });
 })
 
 .controller('AppCtrl', function($scope, $state, $ionicPopup, AuthService, AUTH_EVENTS) {

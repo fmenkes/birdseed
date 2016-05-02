@@ -22,7 +22,7 @@ describe('login page', function() {
     element(by.xpath("//*[@nav-bar='active']//*//div//span//button")).click();
     element(by.cssContainingText('.item', 'Wallets')).click();
     element(by.buttonText('Create new Wallet')).click();
-    element(by.id('walletName')).sendKeys('test');
+    element(by.model('wallet.name')).sendKeys('test');
     element(by.buttonText('Save')).click();
 
     var list = element.all(by.css('.list li'));

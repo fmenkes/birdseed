@@ -16,7 +16,13 @@ angular.module('client')
     }
     db.transaction(function(tx) {
       tx.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
-      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets (name TEXT, income INTEGER, expenditure INTEGER)');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets (id INTEGER PRIMARY KEY, name TEXT, budget DECIMAL(18,2), spent DECIMAL(18,2))', [], function() {
+        console.log("Created wallets table.");
+      }, function(tx, e) {
+        console.log(e);
+      });
     });
   };
 
@@ -94,9 +100,9 @@ angular.module('client')
 })
 
 .service('WalletService', function($q, DB) {
-  var insertWallet = function(name) {
-    var query = 'INSERT INTO wallets (name, income, expenditure) VALUES (?, ?, ?)';
-    var args = [name, 10000, 5000];
+  var insertWallet = function(name, budget) {
+    var query = 'INSERT INTO wallets (name, budget, spent) VALUES (?, ?, ?)';
+    var args = [name, budget, 0];
 
     return DB.query(query, args).then(function(result) {
       return result.insertId;
@@ -121,10 +127,23 @@ angular.module('client')
     return DB.getAll('wallets');
   };
 
+  var getWallet = function(id) {
+    var query = 'SELECT * FROM wallets WHERE id = ?';
+    var args = [id];
+
+    return DB.query(query, args).then(function(result) {
+      console.log(result);
+      return result.rows.item(0);
+    }, function(err) {
+      console.log("Error: " + err.message);
+    });
+  };
+
   return {
     insert: insertWallet,
     delete: deleteWallet,
-    getAll: getAllWallets,
+    find: getAllWallets,
+    findOne: getWallet,
     deleteAll: deleteAllWallets
   };
 })

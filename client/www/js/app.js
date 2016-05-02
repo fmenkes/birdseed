@@ -34,10 +34,22 @@ angular.module('client', ['ionic', 'ngCordova'])
     templateUrl: 'templates/main.html',
     controller: 'MainCtrl'
   })
-  .state('inside.wallet', {
-    url: '/wallet',
-    templateUrl: 'templates/wallet.html',
-    controller: 'WalletCtrl'
+  .state('inside.wallets', {
+    cache: false,
+    url: '/wallets',
+    templateUrl: 'templates/wallets.html',
+    controller: 'WalletsCtrl'
+  })
+  .state('inside.new_wallet', {
+    url: '/new_wallet',
+    templateUrl: 'templates/new_wallet.html',
+    controller: 'NewWalletCtrl'
+  })
+  .state('inside.wallet_detail', {
+    cache: false,
+    url: '/wallet/:walletId',
+    templateUrl: 'templates/wallet_detail.html',
+    controller: 'WalletDetailCtrl'
   })
   .state('inside.trophies', {
     url: '/trophies',
@@ -109,18 +121,5 @@ angular.module('client', ['ionic', 'ngCordova'])
         $rootScope.$apply();
       });
     });
-/*
-    if (AuthService.isAuthenticated()) {
-      $timeout(function() {
-        $location.path('/inside/main');
-        $rootScope.$apply();
-      });
-    }
-    else {
-      $timeout(function() {
-        $location.path('/outside/login');
-        $rootScope.$apply();
-      });
-    }*/
   });
 });

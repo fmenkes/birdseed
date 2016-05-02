@@ -6,6 +6,7 @@ var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var protractor = require('gulp-protractor').protractor;
+var jasmine = require('gulp-jasmine');
 var sh = require('shelljs');
 
 var paths = {
@@ -53,10 +54,16 @@ gulp.task('git-check', function(done) {
 
 // This will fail in a new installation due to the selenium-standalone server
 // not being installed. Maybe worth automating for practice?
-gulp.task('test', function() {
+gulp.task('e2e', function() {
   gulp.src(["./test/e2e/*.js"])
     .pipe(protractor({
-        configFile: "test/config/protractor.config.js"
+      configFile: "test/config/protractor.config.js"
     }))
+    .on('error', function(e) { throw e; });
+});
+
+gulp.task('unit', function() {
+  gulp.src(["./test/unit/*.js"])
+    .pipe(jasmine({ verbose: true }))
     .on('error', function(e) { throw e; });
 });

@@ -5,7 +5,7 @@ angular.module('client')
 })
 
 .constant('API_ENDPOINT_URL', {
-   mobile: 'http://192.168.0.7:8080/api',
+   mobile: 'https://fierce-lake-67848.herokuapp.com/api',
    browser: 'http://localhost:8100/api'
 })
 
