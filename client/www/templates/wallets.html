@@ -7,7 +7,7 @@
       Delete all Wallets
     </button>
     <ul class="list">
-      <li class="item" ui-sref="inside.wallet_detail({walletId: wallet.id})" ng-repeat="wallet in wallets">
+      <li class="item" ui-sref="inside.wallet_detail({walletId: wallet.walletId})" ng-repeat="wallet in wallets">
         <span>{{ wallet.name }}: {{ wallet.spent }}/{{ wallet.budget }}</span>
       </li>
     </ul>

@@ -2,7 +2,6 @@
 
 angular.module('client')
 
-// TODO: rewrite this as a wrapper with all db functions
 .factory('DB', function($q, $cordovaSQLite, $ionicPlatform) {
   var db;
 
@@ -15,14 +14,59 @@ angular.module('client')
       db = window.openDatabase("local.db", "1.0", "Local Database", 10000);
     }
     db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS tokens (token TEXT)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS users ' +
+      '(userId TEXT PRIMARY KEY, ' +
+      'username TEXT, ' +
+      'active INTEGER, ' +
+      'savings DECIMAL(18,2), ' +
+      'income DECIMAL(18,2))');
     });
     db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets (id INTEGER PRIMARY KEY, name TEXT, budget DECIMAL(18,2), spent DECIMAL(18,2))', [], function() {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS tokens ' +
+      '(tokenId INTEGER PRIMARY KEY, ' +
+      'user INTEGER, ' +
+      'token TEXT, ' +
+      'FOREIGN KEY(user) REFERENCES users(userId))');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS trophies ' +
+      '(trophyId INTEGER PRIMARY KEY, ' +
+      'name TEXT, ' +
+      'user INTEGER, ' +
+      'icon TEXT, ' +
+      'FOREIGN KEY(user) REFERENCES users(userId))');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets ' +
+      '(walletId INTEGER PRIMARY KEY, ' +
+      'name TEXT, ' +
+      'icon TEXT, ' +
+      'user INTEGER, ' +
+      'budget DECIMAL(18,2), ' +
+      'spent DECIMAL(18,2), ' +
+      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
         console.log("Created wallets table.");
       }, function(tx, e) {
         console.log(e);
       });
+    });
+
+    //this.dropTables();
+  };
+
+  // Drop the database.
+  this.dropTables = function() {
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS users');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS tokens');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS trophies');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS wallets');
     });
   };
 
@@ -69,12 +113,14 @@ angular.module('client')
 })
 
 .factory('Auth', function(DB) {
-  this.insertToken = function(token) {
-    var query = 'INSERT INTO tokens (token) SELECT ? WHERE NOT EXISTS (SELECT * FROM tokens)';
-    var args = [token];
+  this.insertToken = function(token, userId) {
+    var query = 'INSERT INTO tokens (token, user) SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM tokens)';
+    var args = [token, userId];
 
     return DB.query(query, args).then(function(result) {
       return result.insertId;
+    }, function(err) {
+      console.log(err.message);
     });
   };
 
@@ -83,9 +129,13 @@ angular.module('client')
     var args = [];
 
     return DB.query(query, args).then(function(result) {
+      console.log(result);
+
       if(result.rows.length > 0) return result.rows.item(0);
 
       return null;
+    }, function(err) {
+      console.log(err.message);
     });
   };
 
@@ -96,16 +146,32 @@ angular.module('client')
     return DB.query(query, args);
   };
 
+  this.insertUser = function(userId) {
+    var query = 'INSERT INTO users (userId) VALUES (?)';
+    var args = [userId];
+
+    return DB.query(query, args).then(function(result) {
+      console.log(result);
+      return result.insertId;
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
   return this;
 })
 
-.service('WalletService', function($q, DB) {
+.service('WalletService', function($q, DB, Auth) {
   var insertWallet = function(name, budget) {
-    var query = 'INSERT INTO wallets (name, budget, spent) VALUES (?, ?, ?)';
-    var args = [name, budget, 0];
+    // Check which user is logged in
+    // TODO: replace this with global angular value
+    return Auth.findToken().then(function(result) {
+      var query = 'INSERT INTO wallets (name, budget, spent, user) VALUES (?, ?, ?, ?)';
+      var args = [name, budget, 0, result.user];
 
-    return DB.query(query, args).then(function(result) {
-      return result.insertId;
+      return DB.query(query, args).then(function(result) {
+        return result.insertId;
+      });
     });
   };
 
@@ -124,11 +190,29 @@ angular.module('client')
   };
 
   var getAllWallets = function() {
-    return DB.getAll('wallets');
+    // Check which user is logged in
+    // TODO: replace this with global angular value
+    return Auth.findToken().then(function(result) {
+      var query = 'SELECT * FROM wallets WHERE user = ?';
+      var args = [result.user];
+
+      return DB.query(query, args).then(function(result) {
+        var output = [];
+
+        for(var i = 0; i < result.rows.length; i++) {
+          output.push(result.rows.item(i));
+        }
+
+        return output;
+      }, function(err) {
+        console.log(err.message);
+      });
+    });
+    //return DB.getAll('wallets');
   };
 
   var getWallet = function(id) {
-    var query = 'SELECT * FROM wallets WHERE id = ?';
+    var query = 'SELECT * FROM wallets WHERE walletId = ?';
     var args = [id];
 
     return DB.query(query, args).then(function(result) {
@@ -152,8 +236,10 @@ angular.module('client')
   var isAuthenticated = false;
   var authToken;
 
-  function storeUserCredentials(token) {
-    Auth.insertToken(token);
+  function storeUserCredentials(userId, token) {
+    Auth.insertUser(userId).then(function() {
+      Auth.insertToken(token, userId);
+    });
     useCredentials(token);
   }
 
@@ -176,6 +262,7 @@ angular.module('client')
     return $q(function(resolve, reject) {
       Auth.findToken().then(function(token) {
         if(token) {
+          console.log(token);
           useCredentials(token);
           resolve("User Authenticated");
         } else {
@@ -204,7 +291,7 @@ angular.module('client')
     return $q(function(resolve, reject) {
       $http.post(API_ENDPOINT.url + '/auth/login', user).then(function(result) {
         if(result.data.success) {
-          storeUserCredentials(result.data.token);
+          storeUserCredentials(result.data.userId, result.data.token);
           resolve(result.data.msg);
         } else {
           reject(result.data.msg);
@@ -222,7 +309,8 @@ angular.module('client')
     register: register,
     logout: logout,
     loadUserCredentials: loadUserCredentials,
-    isAuthenticated: function() { return isAuthenticated; }
+    isAuthenticated: function() { return isAuthenticated; },
+    getUser: function() { return user; }
   };
 })
 

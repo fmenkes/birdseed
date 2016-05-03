@@ -74,38 +74,7 @@ angular.module('client')
 })
 
 .controller('WalletsCtrl', function($scope, $ionicPopup, WalletService, API_ENDPOINT) {
-  // TODO: lots of room for optimization
   $scope.wallets = [];
-
-  $scope.newWallet = function() {
-    $scope.wallet = {};
-
-    var namePopup = $ionicPopup.show({
-      title: 'New Wallet',
-      template: '<input id="walletName" type="text" ng-model="wallet.name">',
-      scope: $scope,
-      buttons: [
-        { text: 'Cancel' },
-        { text: 'Save',
-          onTap: function(e) {
-            if(!$scope.wallet.name) {
-              e.preventDefault();
-            } else {
-              return $scope.wallet.name;
-            }
-          }
-        }
-      ]
-    });
-
-    namePopup.then(function(name) {
-      if(!name) return;
-
-      WalletService.insert(name).then(function() {
-        update();
-      });
-    });
-  };
 
   $scope.deleteWallets = function() {
     WalletService.deleteAll().then(function() {

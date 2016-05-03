@@ -23,7 +23,7 @@ router.post('/', function(req, res) {
         if(match && !err) {
           var token = jwt.encode(user, secret);
 
-          res.json({ success: true, token: 'JWT ' + token});
+          res.json({ success: true, token: 'JWT ' + token, userId: user._id });
         } else {
           res.json({ success: false, msg: 'Authentication failed. Incorrect password.' });
         }
