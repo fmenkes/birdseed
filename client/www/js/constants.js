@@ -11,4 +11,8 @@ angular.module('client')
 
 .value('API_ENDPOINT', {
   url: 'http://localhost:8100/api'
+})
+
+.value('user', {
+  id: ''
 });

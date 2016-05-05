@@ -4,5 +4,11 @@
     <p>Name: {{ wallet.name }} <br>
        Budget: {{ wallet.budget }} <br>
        Spent: {{ wallet.spent }}</p>
+
+    <div class="list">
+    <label class="item item-input">
+      <input type="text" placeholder="Value" ng-model="wallet.transaction"/>
+    </label>
+    <button class="button button-block button-calm" ng-click="newTransaction()">Save transaction</button>
   </ion-content>
 </ion-view>

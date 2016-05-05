@@ -54,7 +54,7 @@ angular.module('client')
   };
 })
 
-.controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $ionicSideMenuDelegate, $state) {
+.controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $ionicSideMenuDelegate, $state, Auth, user) {
   $scope.logout = function() {
     AuthService.logout();
     $ionicHistory.nextViewOptions({
@@ -67,13 +67,37 @@ angular.module('client')
   $scope.toggleRight = function() {
     $ionicSideMenuDelegate.toggleRight();
   };
+
+  $scope.user = user;
+
+  var update = function() {
+    Auth.getUser(user.id).then(function(result) {
+      $scope.user.income = result.income;
+    });
+  };
+
+  update();
 })
 
 .controller('MainCtrl', function($scope) {
 
 })
 
-.controller('WalletsCtrl', function($scope, $ionicPopup, WalletService, API_ENDPOINT) {
+.controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $state) {
+  $scope.updateIncome = function() {
+    if(!$scope.user.income) return;
+
+    Auth.updateIncome($scope.user.id, $scope.user.income).then(function() {
+      $ionicHistory.nextViewOptions({
+        disableBack: true,
+        disableAnimate: true
+      });
+      $state.go('inside.main');
+    });
+  };
+})
+
+.controller('WalletsCtrl', function($scope, WalletService, API_ENDPOINT) {
   $scope.wallets = [];
 
   $scope.deleteWallets = function() {
@@ -91,7 +115,7 @@ angular.module('client')
   update();
 })
 
-.controller('NewWalletCtrl', function($scope, $state, $ionicHistory, WalletService) {
+.controller('NewWalletCtrl', function($scope, $state, $ionicHistory, $ionicPopup, WalletService, TrophyService) {
   $scope.wallet = {
     name: ''
   };
@@ -103,10 +127,21 @@ angular.module('client')
     if(!name || !budget) return;
 
     WalletService.insert(name, budget).then(function() {
-      $ionicHistory.nextViewOptions({
-        disableBack: true
+      TrophyService.userHasTrophy("firstWallet").then(function(hasTrophy) {
+        if(!hasTrophy) {
+          $ionicPopup.alert({
+            title: "New trophy!",
+            template: "<p>You created your first wallet!</p>"
+          }).then(function() {
+            TrophyService.insert("firstWallet", "trophy");
+          });
+        }
+
+        $ionicHistory.nextViewOptions({
+          disableBack: true
+        });
+        $state.go('inside.wallets');
       });
-      $state.go('inside.wallets');
     });
   };
 })
@@ -115,12 +150,39 @@ angular.module('client')
   $scope.wallet = {
     name: 'default',
     budget: 0,
-    spent: 0
+    spent: 0,
+    walletId: 0,
+    transaction: 0
   };
 
-  WalletService.findOne($stateParams.walletId).then(function(result) {
-    $scope.wallet = result;
-  });
+  var update = function() {
+    WalletService.findOne($stateParams.walletId).then(function(result) {
+      $scope.wallet = result;
+    });
+  };
+
+  $scope.newTransaction = function() {
+    console.log($scope.wallet.transaction);
+    if(!$scope.wallet.transaction) return;
+
+    WalletService.addTransaction($scope.wallet.walletId, $scope.wallet.transaction).then(function() {
+      update();
+    });
+  };
+
+  update();
+})
+
+.controller('TrophiesCtrl', function($scope, TrophyService) {
+  $scope.trophies = [];
+
+  var update = function() {
+    TrophyService.find().then(function(trophies) {
+      $scope.trophies = trophies;
+    });
+  };
+
+  update();
 })
 
 .controller('AppCtrl', function($scope, $state, $ionicPopup, AuthService, AUTH_EVENTS) {

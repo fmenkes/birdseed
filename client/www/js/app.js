@@ -51,9 +51,16 @@ angular.module('client', ['ionic', 'ngCordova'])
     templateUrl: 'templates/wallet_detail.html',
     controller: 'WalletDetailCtrl'
   })
+  .state('inside.income', {
+    url: '/income',
+    templateUrl: 'templates/income.html',
+    controller: 'IncomeCtrl'
+  })
   .state('inside.trophies', {
+    cache: false,
     url: '/trophies',
-    templateUrl: 'templates/trophies.html'
+    templateUrl: 'templates/trophies.html',
+    controller: 'TrophiesCtrl'
   });
 
   $urlRouterProvider.otherwise('/home');

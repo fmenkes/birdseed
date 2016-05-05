@@ -1,11 +1,7 @@
 <ion-view title="Trophy Cabinet">
   <ion-content class="padding">
-    <div class="row">
-      <div class="col"><img src="img/chicken.png" class="trophy"/></div>
-      <div class="col"><img src="img/chicken.png" class="trophy"/></div>
-      <div class="col"><img src="img/chicken.png" class="trophy"/></div>
-      <div class="col"><img src="img/chicken.png" class="trophy"/></div>
-      <div class="col"><img src="img/chicken.png" class="trophy"/></div>
+    <div class="row" ng-if="trophies.length > 0">
+      <div class="col" ng-repeat="trophy in trophies"><img ng-src="img/{{ trophy.icon }}.png"></div>
     </div>
   </ion-content>
 </ion-view>

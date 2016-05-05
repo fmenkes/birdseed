@@ -158,20 +158,40 @@ angular.module('client')
     });
   };
 
+  this.getUser = function(userId) {
+    var query = 'SELECT * FROM users WHERE userId = ?';
+    var args = [userId];
+
+    return DB.query(query, args).then(function(result) {
+      return result.rows.item(0);
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  this.updateIncome = function(userId, income) {
+    var query = 'UPDATE users SET income = ? WHERE userId = ?';
+    var args = [income, userId];
+
+    console.log(userId);
+
+    return DB.query(query, args).then(function(result) {
+      console.log(result);
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
   return this;
 })
 
-.service('WalletService', function($q, DB, Auth) {
+.service('WalletService', function($q, DB, Auth, user) {
   var insertWallet = function(name, budget) {
-    // Check which user is logged in
-    // TODO: replace this with global angular value
-    return Auth.findToken().then(function(result) {
-      var query = 'INSERT INTO wallets (name, budget, spent, user) VALUES (?, ?, ?, ?)';
-      var args = [name, budget, 0, result.user];
+    var query = 'INSERT INTO wallets (name, budget, spent, user) VALUES (?, ?, ?, ?)';
+    var args = [name, budget, 0, user.id];
 
-      return DB.query(query, args).then(function(result) {
-        return result.insertId;
-      });
+    return DB.query(query, args).then(function(result) {
+      return result.insertId;
     });
   };
 
@@ -182,33 +202,44 @@ angular.module('client')
     return DB.query(query, args);
   };
 
-  var deleteAllWallets = function() {
-    var query = 'DELETE FROM wallets';
-    var args = [];
+  var addTransaction = function(id, amount) {
+    var query = 'UPDATE wallets SET spent = spent + ? WHERE walletId = ?';
+    var args = [amount, id];
 
-    return DB.query(query, args);
+    return DB.query(query, args).then(function(result) {
+
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var deleteAllWallets = function() {
+    var query = 'DELETE FROM wallets WHERE user = ?';
+    var args = [user.id];
+
+    return DB.query(query, args).then(function(result) {
+
+    }, function(err) {
+      console.log(err.message);
+    });
   };
 
   var getAllWallets = function() {
     // Check which user is logged in
-    // TODO: replace this with global angular value
-    return Auth.findToken().then(function(result) {
-      var query = 'SELECT * FROM wallets WHERE user = ?';
-      var args = [result.user];
+    var query = 'SELECT * FROM wallets WHERE user = ?';
+    var args = [user.id];
 
-      return DB.query(query, args).then(function(result) {
-        var output = [];
+    return DB.query(query, args).then(function(result) {
+      var output = [];
 
-        for(var i = 0; i < result.rows.length; i++) {
-          output.push(result.rows.item(i));
-        }
+      for(var i = 0; i < result.rows.length; i++) {
+        output.push(result.rows.item(i));
+      }
 
-        return output;
-      }, function(err) {
-        console.log(err.message);
-      });
+      return output;
+    }, function(err) {
+      console.log(err.message);
     });
-    //return DB.getAll('wallets');
   };
 
   var getWallet = function(id) {
@@ -228,11 +259,60 @@ angular.module('client')
     delete: deleteWallet,
     find: getAllWallets,
     findOne: getWallet,
-    deleteAll: deleteAllWallets
+    deleteAll: deleteAllWallets,
+    addTransaction: addTransaction
   };
 })
 
-.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT) {
+.service('TrophyService', function(DB, user) {
+  var getAllTrophies = function() {
+    var query = 'SELECT * FROM trophies WHERE user = ?';
+    var args = [user.id];
+
+    return DB.query(query, args).then(function(result) {
+      var output = [];
+
+      for(var i = 0; i < result.rows.length; i++) {
+        output.push(result.rows.item(i));
+      }
+
+      return output;
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var userHasTrophy = function(trophy) {
+    var query = 'SELECT * FROM trophies WHERE name = ? AND user = ?';
+    var args = [trophy, user.id];
+
+    return DB.query(query, args).then(function(result) {
+      return result.rows.length > 0;
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  // TODO: streamline adding trophies
+  var addTrophy = function(name, icon) {
+    var query = 'INSERT INTO trophies (name, icon, user) VALUES (?, ?, ?)';
+    var args = [name, icon, user.id];
+
+    return DB.query(query, args).then(function(result) {
+      return result.insertId;
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  return {
+    userHasTrophy: userHasTrophy,
+    insert: addTrophy,
+    find: getAllTrophies
+  };
+})
+
+.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT, user) {
   var isAuthenticated = false;
   var authToken;
 
@@ -240,12 +320,14 @@ angular.module('client')
     Auth.insertUser(userId).then(function() {
       Auth.insertToken(token, userId);
     });
-    useCredentials(token);
+
+    useCredentials(userId, token);
   }
 
-  function useCredentials(token) {
+  function useCredentials(userId, token) {
     isAuthenticated = true;
     authToken = token;
+    user.id = userId;
 
     // Set token as default header
     $http.defaults.headers.common.Authorization = authToken;
@@ -262,8 +344,7 @@ angular.module('client')
     return $q(function(resolve, reject) {
       Auth.findToken().then(function(token) {
         if(token) {
-          console.log(token);
-          useCredentials(token);
+          useCredentials(token.user, token.token);
           resolve("User Authenticated");
         } else {
           reject();
@@ -286,6 +367,8 @@ angular.module('client')
       });
     });
   };
+
+  // TODO: loading popup
 
   var login = function(user) {
     return $q(function(resolve, reject) {
