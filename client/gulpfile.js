@@ -6,7 +6,7 @@ var sass = require('gulp-sass');
 var minifyCss = require('gulp-minify-css');
 var rename = require('gulp-rename');
 var protractor = require('gulp-protractor').protractor;
-var jasmine = require('gulp-jasmine');
+var karma = require('gulp-karma');
 var sh = require('shelljs');
 
 var paths = {
@@ -63,7 +63,11 @@ gulp.task('e2e', function() {
 });
 
 gulp.task('unit', function() {
-  gulp.src(["./test/unit/*.js"])
-    .pipe(jasmine({ verbose: true }))
-    .on('error', function(e) { throw e; });
+  // Dummy source so gulp uses Karma configuration
+  return gulp.src(["./foobar"])
+    .pipe(karma({ configFile:"./test/config/karma.conf.js", action: 'run' }))
+    .on('error', function(e) {
+      console.log(e);
+      this.emit('end');
+    });
 });

@@ -21,10 +21,6 @@ angular.module('client')
       });
     });
   };
-
-  $scope.test = function() {
-    $scope.testText = "test";
-  };
 })
 
 .controller('RegisterCtrl', function($scope, AuthService, $ionicPopup, $state) {
@@ -173,12 +169,31 @@ angular.module('client')
   update();
 })
 
-.controller('TrophiesCtrl', function($scope, TrophyService) {
+.controller('TrophiesCtrl', function($scope, TrophyService, $ionicPopup) {
   $scope.trophies = [];
 
   var update = function() {
     TrophyService.find().then(function(trophies) {
       $scope.trophies = trophies;
+    });
+  };
+
+  //TODO: add wallet.description
+  $scope.showPopup = function(trophy) {
+    $scope.trophy = trophy;
+    var title = trophy.name;
+
+    $ionicPopup.show({
+      scope: $scope,
+      title: title,
+      template: "<img class='trophy' ng-src='img/{{ trophy.icon }}.png'><br><p>You've created your first wallet!</p>",
+      buttons: [{ text: 'OK', type: 'button-calm', onTap: function(e) { return; } }]
+    });
+  };
+
+  $scope.deleteTrophies = function() {
+    TrophyService.deleteAll().then(function() {
+      update();
     });
   };
 

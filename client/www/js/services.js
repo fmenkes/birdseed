@@ -19,14 +19,22 @@ angular.module('client')
       'username TEXT, ' +
       'active INTEGER, ' +
       'savings DECIMAL(18,2), ' +
-      'income DECIMAL(18,2))');
+      'income DECIMAL(18,2))', [], function() {
+        console.log("Created users table.");
+      }, function(tx, e) {
+        console.log(e);
+      });
     });
     db.transaction(function(tx) {
       tx.executeSql('CREATE TABLE IF NOT EXISTS tokens ' +
       '(tokenId INTEGER PRIMARY KEY, ' +
       'user INTEGER, ' +
       'token TEXT, ' +
-      'FOREIGN KEY(user) REFERENCES users(userId))');
+      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
+        console.log("Created tokens table.");
+      }, function(tx, e) {
+        console.log(e);
+      });
     });
     db.transaction(function(tx) {
       tx.executeSql('CREATE TABLE IF NOT EXISTS trophies ' +
@@ -34,7 +42,11 @@ angular.module('client')
       'name TEXT, ' +
       'user INTEGER, ' +
       'icon TEXT, ' +
-      'FOREIGN KEY(user) REFERENCES users(userId))');
+      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
+        console.log("Created trophies table.");
+      }, function(tx, e) {
+        console.log(e);
+      });
     });
     db.transaction(function(tx) {
       tx.executeSql('CREATE TABLE IF NOT EXISTS wallets ' +
@@ -305,10 +317,19 @@ angular.module('client')
     });
   };
 
+  // Debugging purposes.
+  var deleteAll = function() {
+    var query = 'DELETE FROM trophies WHERE user = ?';
+    var args = [user.id];
+
+    return DB.query(query, args);
+  };
+
   return {
     userHasTrophy: userHasTrophy,
     insert: addTrophy,
-    find: getAllTrophies
+    find: getAllTrophies,
+    deleteAll: deleteAll
   };
 })
 

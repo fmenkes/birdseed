@@ -23,6 +23,7 @@ describe('login page', function() {
     element(by.cssContainingText('.item', 'Wallets')).click();
     element(by.buttonText('Create new Wallet')).click();
     element(by.model('wallet.name')).sendKeys('test');
+    element(by.model('wallet.budget')).sendKeys('2000');
     element(by.buttonText('Save')).click();
 
     var list = element.all(by.css('.list li'));
