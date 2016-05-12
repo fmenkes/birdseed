@@ -6,7 +6,8 @@
     "angular-mocks": "1.4.3"
   },
   "dependencies": {
-    "ngCordova": "~0.1.26-alpha"
+    "ngCordova": "~0.1.26-alpha",
+    "angular-svg-round-progressbar": "~0.4.4"
   },
   "resolutions": {
     "angular": "1.4.3"

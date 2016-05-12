@@ -75,8 +75,46 @@ angular.module('client')
   update();
 })
 
-.controller('MainCtrl', function($scope) {
+.controller('MainCtrl', function($scope, DB) {
+  $scope.dropTables = function() {
+    DB.dropTables();
+  };
+})
 
+.controller('OCRCtrl', function($scope, $q, $cordovaCamera) {
+  /*var getImage = function() {
+    var deferred = $q.defer();
+
+    var options = {
+        quality: 100,
+        destinationType: Camera.DestinationType.DATA_URL,
+        sourceType: Camera.PictureSourceType.CAMERA,
+        allowEdit: true,
+        encodingType: Camera.EncodingType.JPEG,
+        popoverOptions: CameraPopoverOptions,
+        saveToPhotoAlbum: false,
+        correctOrientation:true
+    };
+
+    $cordovaCamera.getPicture(options).then(function(imageData) {
+      var image = document.getElementById('ocrImg');
+      image.src = "data:image/jpeg;base64," + imageData;
+      deferred.resolve(image);
+    }, function(err) {
+      deferred.reject(err.message);
+    });
+
+    return deferred.promise;
+  };
+
+  $scope.testOCR = function() {
+    getImage().then(function(image) {
+      OCRAD(image, function(text) {
+        console.log(text);
+        alert(text);
+      });
+    });
+  };*/
 })
 
 .controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $state) {
@@ -117,12 +155,15 @@ angular.module('client')
   };
 
   $scope.saveWallet = function() {
+    console.log($scope.wallet.icon);
+
     var name = $scope.wallet.name;
     var budget = $scope.wallet.budget;
+    var icon = $scope.wallet.icon || '';
 
     if(!name || !budget) return;
 
-    WalletService.insert(name, budget).then(function() {
+    WalletService.insert(name, budget, icon).then(function() {
       TrophyService.userHasTrophy("firstWallet").then(function(hasTrophy) {
         if(!hasTrophy) {
           $ionicPopup.alert({
@@ -150,6 +191,9 @@ angular.module('client')
     walletId: 0,
     transaction: 0
   };
+
+  $scope.max = $scope.wallet.budget;
+  $scope.current = $scope.wallet.spent;
 
   var update = function() {
     WalletService.findOne($stateParams.walletId).then(function(result) {

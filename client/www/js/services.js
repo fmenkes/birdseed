@@ -2,10 +2,12 @@
 
 angular.module('client')
 
-.factory('DB', function($q, $cordovaSQLite, $ionicPlatform) {
+.factory('DB', function($q, $cordovaSQLite) {
   var db;
 
   this.init = function() {
+    var deferred = $q.defer();
+
     if(window.cordova) {
       // App syntax
       db = $cordovaSQLite.openDB({ name: "local.db", location: "default" });
@@ -13,61 +15,68 @@ angular.module('client')
       // Ionic serve syntax
       db = window.openDatabase("local.db", "1.0", "Local Database", 10000);
     }
+
+    // Create table queries
+    var userQuery = 'CREATE TABLE IF NOT EXISTS users ' +
+    '(userId TEXT PRIMARY KEY, ' +
+    'username TEXT, ' +
+    'active INTEGER, ' +
+    'savings DECIMAL(18,2), ' +
+    'income DECIMAL(18,2))';
+
+    var tokenQuery = 'CREATE TABLE IF NOT EXISTS tokens ' +
+    '(tokenId INTEGER PRIMARY KEY, ' +
+    'user INTEGER, ' +
+    'token TEXT, ' +
+    'FOREIGN KEY(user) REFERENCES users(userId))';
+
+    var trophyQuery = 'CREATE TABLE IF NOT EXISTS trophies ' +
+    '(trophyId INTEGER PRIMARY KEY, ' +
+    'name TEXT, ' +
+    'user INTEGER, ' +
+    'icon TEXT, ' +
+    'FOREIGN KEY(user) REFERENCES users(userId))';
+
+    var walletQuery = 'CREATE TABLE IF NOT EXISTS wallets ' +
+    '(walletId INTEGER PRIMARY KEY, ' +
+    'name TEXT, ' +
+    'icon TEXT, ' +
+    'user INTEGER, ' +
+    'budget DECIMAL(18,2), ' +
+    'spent DECIMAL(18,2), ' +
+    'FOREIGN KEY(user) REFERENCES users(userId))';
+
+    // Really ugly, but maybe best way to do it?
     db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS users ' +
-      '(userId TEXT PRIMARY KEY, ' +
-      'username TEXT, ' +
-      'active INTEGER, ' +
-      'savings DECIMAL(18,2), ' +
-      'income DECIMAL(18,2))', [], function() {
-        console.log("Created users table.");
+      tx.executeSql(userQuery, [], function() {
+        tx.executeSql(tokenQuery, [], function() {
+          tx.executeSql(trophyQuery, [], function() {
+            tx.executeSql(walletQuery, [], function() {
+              deferred.resolve("All tables created successfully.");
+            }, function(tx, e) {
+              deferred.reject(e.message);
+            });
+          }, function(tx, e) {
+            deferred.reject(e.message);
+          });
+        }, function(tx, e) {
+          deferred.reject(e.message);
+        });
       }, function(tx, e) {
-        console.log(e);
-      });
-    });
-    db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS tokens ' +
-      '(tokenId INTEGER PRIMARY KEY, ' +
-      'user INTEGER, ' +
-      'token TEXT, ' +
-      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
-        console.log("Created tokens table.");
-      }, function(tx, e) {
-        console.log(e);
-      });
-    });
-    db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS trophies ' +
-      '(trophyId INTEGER PRIMARY KEY, ' +
-      'name TEXT, ' +
-      'user INTEGER, ' +
-      'icon TEXT, ' +
-      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
-        console.log("Created trophies table.");
-      }, function(tx, e) {
-        console.log(e);
-      });
-    });
-    db.transaction(function(tx) {
-      tx.executeSql('CREATE TABLE IF NOT EXISTS wallets ' +
-      '(walletId INTEGER PRIMARY KEY, ' +
-      'name TEXT, ' +
-      'icon TEXT, ' +
-      'user INTEGER, ' +
-      'budget DECIMAL(18,2), ' +
-      'spent DECIMAL(18,2), ' +
-      'FOREIGN KEY(user) REFERENCES users(userId))', [], function() {
-        console.log("Created wallets table.");
-      }, function(tx, e) {
-        console.log(e);
+        deferred.reject(e.message);
       });
     });
 
     //this.dropTables();
+
+    return deferred.promise;
   };
 
   // Drop the database.
   this.dropTables = function() {
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS budgets');
+    });
     db.transaction(function(tx) {
       tx.executeSql('DROP TABLE IF EXISTS users');
     });
@@ -80,30 +89,6 @@ angular.module('client')
     db.transaction(function(tx) {
       tx.executeSql('DROP TABLE IF EXISTS wallets');
     });
-  };
-
-  this.getAll = function(table) {
-    var query = 'SELECT * FROM ' + table;
-    var args = [];
-    var deferred = $q.defer();
-
-    db.transaction(function(tx) {
-      tx.executeSql(query, args, function(tx, result) {
-        var output = [];
-
-        for(var i = 0; i < result.rows.length; i++) {
-          output.push(result.rows.item(i));
-        }
-
-        console.log(result, output);
-
-        deferred.resolve(output);
-      }, function(err) {
-        deferred.reject(console.log(err.message));
-      });
-    });
-
-    return deferred.promise;
   };
 
   this.query = function(query, args) {
@@ -162,8 +147,9 @@ angular.module('client')
     var query = 'INSERT INTO users (userId) VALUES (?)';
     var args = [userId];
 
+    console.log(userId);
+
     return DB.query(query, args).then(function(result) {
-      console.log(result);
       return result.insertId;
     }, function(err) {
       console.log(err.message);
@@ -198,9 +184,9 @@ angular.module('client')
 })
 
 .service('WalletService', function($q, DB, Auth, user) {
-  var insertWallet = function(name, budget) {
-    var query = 'INSERT INTO wallets (name, budget, spent, user) VALUES (?, ?, ?, ?)';
-    var args = [name, budget, 0, user.id];
+  var insertWallet = function(name, budget, icon) {
+    var query = 'INSERT INTO wallets (name, budget, icon, spent, user) VALUES (?, ?, ?, ?, ?)';
+    var args = [name, budget, icon, 0, user.id];
 
     return DB.query(query, args).then(function(result) {
       return result.insertId;

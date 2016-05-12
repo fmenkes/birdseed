@@ -1,14 +1,20 @@
 <ion-view>
   <ion-nav-title>{{ wallet.name }}</ion-nav-title>
   <ion-content class="padding">
-    <p>Name: {{ wallet.name }} <br>
-       Budget: {{ wallet.budget }} <br>
-       Spent: {{ wallet.spent }}</p>
-
+    <div class="progress-wrapper">
+      <div class="progress ng-cloak">{{ wallet.spent }}<br>{{ wallet.budget }}</div>
+    <round-progress max="wallet.budget" current="wallet.spent"></round-progress>
+  </div>
     <div class="list">
-    <label class="item item-input">
-      <input type="text" placeholder="Value" ng-model="wallet.transaction"/>
+      <div class="row">
+    <label class="col col-75 item item-input">
+      <input type="number" placeholder="0" ng-model="wallet.transaction"/>
     </label>
+    <label class="col item item-input">
+      <input type="tel" placeholder="00" ng-model="wallet.transactionCents" maxlength="2"/>
+    </label>
+  </div>
+  </div>
     <button class="button button-block button-calm" ng-click="newTransaction()">Save transaction</button>
   </ion-content>
 </ion-view>
