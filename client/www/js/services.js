@@ -20,20 +20,19 @@ angular.module('client')
     var userQuery = 'CREATE TABLE IF NOT EXISTS users ' +
     '(userId TEXT PRIMARY KEY, ' +
     'username TEXT, ' +
-    'active INTEGER, ' +
-    'savings DECIMAL(18,2), ' +
-    'income DECIMAL(18,2))';
+    'savings DECIMAL(18,2) DEFAULT 0, ' +
+    'income DECIMAL(18,2) DEFAULT 0)';
 
     var tokenQuery = 'CREATE TABLE IF NOT EXISTS tokens ' +
     '(tokenId INTEGER PRIMARY KEY, ' +
-    'user INTEGER, ' +
+    'user TEXT, ' +
     'token TEXT, ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
     var trophyQuery = 'CREATE TABLE IF NOT EXISTS trophies ' +
     '(trophyId INTEGER PRIMARY KEY, ' +
     'name TEXT, ' +
-    'user INTEGER, ' +
+    'user TEXT, ' +
     'icon TEXT, ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
@@ -41,7 +40,7 @@ angular.module('client')
     '(walletId INTEGER PRIMARY KEY, ' +
     'name TEXT, ' +
     'icon TEXT, ' +
-    'user INTEGER, ' +
+    'user TEXT, ' +
     'budget DECIMAL(18,2), ' +
     'spent DECIMAL(18,2), ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
@@ -167,14 +166,12 @@ angular.module('client')
     });
   };
 
-  this.updateIncome = function(userId, income) {
-    var query = 'UPDATE users SET income = ? WHERE userId = ?';
-    var args = [income, userId];
-
-    console.log(userId);
+  this.updateFinance = function(userId, income, savings) {
+    var query = 'UPDATE users SET income = ?, savings = ? WHERE userId = ?';
+    var args = [income, savings, userId];
 
     return DB.query(query, args).then(function(result) {
-      console.log(result);
+
     }, function(err) {
       console.log(err.message);
     });

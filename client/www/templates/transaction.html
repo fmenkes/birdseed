@@ -1,0 +1,20 @@
+<ion-view title="New Transaction">
+  <ion-content class="padding">
+    <div class="list">
+      <div class="row">
+      <label class="col col-75 item item-input">
+        <input type="number" placeholder="0" ng-model="data.amount"/>
+      </label>
+      <label class="col item item-input">
+        <input type="tel" placeholder="00" ng-model="data.cents" maxlength="2"/>
+      </label>
+    </div>
+    <label class="item item-input item-select">
+    <div class="input-label">
+      Wallet
+    </div>
+    <select ng-model="data.wallet" ng-options="wallet.walletId as wallet.name for wallet in wallets"></select>
+    </label>
+    <button class="button button-block button-calm" ng-click="newTransaction()">Save</button>
+  </ion-content>
+</ion-view>

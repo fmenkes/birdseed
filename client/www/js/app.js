@@ -62,6 +62,12 @@ angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar']
     templateUrl: 'templates/trophies.html',
     controller: 'TrophiesCtrl'
   })
+  .state('inside.transaction', {
+    cache: false,
+    url: '/transaction',
+    templateUrl: 'templates/transaction.html',
+    controller: 'TransactionCtrl'
+  })
   .state('inside.ocr', {
     url: '/ocr',
     templateUrl: 'templates/ocr.html',

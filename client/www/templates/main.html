@@ -1,7 +1,20 @@
-<ion-view title="Main page">
+<ion-view title="Dashboard">
   <ion-content class="padding">
-    <p>Welcome to the main page!</p>
+    <div ui-sref="inside.income">
+    <p>Your savings: {{ user.savings }}</p>
     <p>Your monthly income: {{ user.income }}</p>
+  </div>
+    <button class="button button-calm button-block" ui-sref="inside.transaction">New transaction</button>
+    <div class="list">
+      <div class="row">
+      <label class="col col-75 item item-input">
+        <input type="number" placeholder="0" ng-model="data.amount"/>
+      </label>
+      <label class="col item item-input">
+        <input type="tel" placeholder="00" ng-model="data.cents" maxlength="2"/>
+      </label>
+    </div>
+    <button class="button button-calm button-block" ng-click="saveIncome()">Add new income</button>
     <button class="button button-calm button-block" ng-click="dropTables()">Drop database tables</button>
   </ion-content>
 </ion-view>

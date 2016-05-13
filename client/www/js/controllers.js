@@ -69,15 +69,70 @@ angular.module('client')
   var update = function() {
     Auth.getUser(user.id).then(function(result) {
       $scope.user.income = result.income;
+      $scope.user.savings = result.savings;
     });
   };
 
   update();
 })
 
-.controller('MainCtrl', function($scope, DB) {
+.controller('MainCtrl', function($scope, DB, Auth) {
+  $scope.data = {
+    amount: null,
+    cents: null
+  };
+
+  $scope.saveIncome = function() {
+    var transaction = $scope.data;
+
+    if(!transaction.amount && !transaction.cents) return;
+
+    if(!transaction.cents) transaction = transaction.amount;
+    else if(!transaction.amount) transaction = transaction.cents / 100;
+    else transaction = transaction.amount + (transaction.cents / 100);
+
+    $scope.user.savings += transaction;
+
+    Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
+      $scope.data = {
+        amount: null,
+        cents: null
+      };
+    });
+  };
+
   $scope.dropTables = function() {
     DB.dropTables();
+  };
+})
+
+.controller('TransactionCtrl', function($scope, $state, $ionicHistory, WalletService) {
+  WalletService.find().then(function(wallets) {
+    $scope.data = {
+      wallet: wallets[0].walletId,
+      amount: null,
+      cents: null
+    };
+
+    $scope.wallets = wallets;
+  });
+
+  $scope.newTransaction = function() {
+    var transaction = $scope.data;
+
+    if(!transaction.amount && !transaction.cents) return;
+
+    if(!transaction.cents) transaction = transaction.amount;
+    else if(!transaction.amount) transaction = transaction.cents / 100;
+    else transaction = transaction.amount + (transaction.cents / 100);
+
+    WalletService.addTransaction($scope.data.wallet, transaction).then(function() {
+      $ionicHistory.nextViewOptions({
+        disableBack: true,
+        disableAnimate: true
+      });
+      $state.go('inside.wallets');
+    });
   };
 })
 
@@ -119,9 +174,7 @@ angular.module('client')
 
 .controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $state) {
   $scope.updateIncome = function() {
-    if(!$scope.user.income) return;
-
-    Auth.updateIncome($scope.user.id, $scope.user.income).then(function() {
+    Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
       $ionicHistory.nextViewOptions({
         disableBack: true,
         disableAnimate: true
@@ -188,8 +241,12 @@ angular.module('client')
     name: 'default',
     budget: 0,
     spent: 0,
-    walletId: 0,
-    transaction: 0
+    walletId: 0
+  };
+
+  $scope.data = {
+    amount: null,
+    cents: null
   };
 
   $scope.max = $scope.wallet.budget;
@@ -198,14 +255,25 @@ angular.module('client')
   var update = function() {
     WalletService.findOne($stateParams.walletId).then(function(result) {
       $scope.wallet = result;
+      $scope.data = {
+        amount: null,
+        cents: null
+      };
     });
   };
 
   $scope.newTransaction = function() {
-    console.log($scope.wallet.transaction);
-    if(!$scope.wallet.transaction) return;
+    var transaction = $scope.data;
 
-    WalletService.addTransaction($scope.wallet.walletId, $scope.wallet.transaction).then(function() {
+    if(!transaction.amount && !transaction.cents) return;
+
+    if(!transaction.cents) transaction = transaction.amount;
+    else if(!transaction.amount) transaction = transaction.cents / 100;
+    else transaction = transaction.amount + (transaction.cents / 100);
+
+    console.log(transaction);
+
+    WalletService.addTransaction($scope.wallet.walletId, transaction).then(function() {
       update();
     });
   };
