@@ -2,9 +2,10 @@
   <ion-nav-title>{{ wallet.name }}</ion-nav-title>
   <ion-content class="padding">
     <div class="progress-wrapper">
-      <div class="progress ng-cloak">{{ wallet.spent | numberFormat }}<br>{{ wallet.budget }}</div>
-    <round-progress max="wallet.budget" current="wallet.spent"></round-progress>
-  </div>
+      <!--div class="progress ng-cloak">{{ wallet.spent | numberFormat }}<br>{{ wallet.budget }}</div-->
+    <round-progress max="wallet.budget" current="wallet.spent" semi="true" color="#003366"></round-progress>
+    <div class="progress-data"><span>{{ wallet.spent | numberFormat }} / {{ wallet.budget | numberFormat }}</span></div>
+    </div>
   <div class="list">
     <div class="row">
     <label class="col col-75 item item-input">
@@ -16,5 +17,6 @@
   </div>
   </div>
     <button class="button button-block button-calm" ng-click="newTransaction()">Save transaction</button>
+    <button class="button button-block button-calm" ng-click="deleteWallet()">Delete wallet</button>
   </ion-content>
 </ion-view>

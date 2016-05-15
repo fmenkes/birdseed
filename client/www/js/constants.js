@@ -10,6 +10,14 @@ angular.module('client')
    browser: 'http://localhost:8100/api'
 })
 
+.constant('ICONS', [
+  'home', 'bill', 'car', 'dog', 'groceries', 'male', 'female', 'star'
+])
+
+.value('chosen_icon', {
+  name: ''
+})
+
 .value('API_ENDPOINT', {
   url: 'http://localhost:8100/api'
 })

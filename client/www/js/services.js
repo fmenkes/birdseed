@@ -191,7 +191,7 @@ angular.module('client')
   };
 
   var deleteWallet = function(id) {
-    var query = 'DELETE FROM wallets WHERE id=?';
+    var query = 'DELETE FROM wallets WHERE walletId=?';
     var args = [id];
 
     return DB.query(query, args);

@@ -4,7 +4,7 @@
     <p>Your savings: {{ user.savings }}</p>
     <p>Your monthly income: {{ user.income }}</p>
   </div>
-    <button class="button button-calm button-block" ui-sref="inside.transaction">New transaction</button>
+    <button ng-if="showTransaction" class="button button-calm button-block" ui-sref="inside.transaction">New transaction</button>
     <div class="list">
       <div class="row">
       <label class="col col-75 item item-input">

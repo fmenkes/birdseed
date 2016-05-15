@@ -51,6 +51,7 @@ angular.module('client')
 })
 
 .controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $ionicSideMenuDelegate, $state, Auth, user) {
+
   $scope.logout = function() {
     AuthService.logout();
     $ionicHistory.nextViewOptions({
@@ -76,7 +77,15 @@ angular.module('client')
   update();
 })
 
-.controller('MainCtrl', function($scope, DB, Auth) {
+.controller('MainCtrl', function($scope, DB, Auth, WalletService) {
+  $scope.$on('$ionicView.beforeEnter', function() {
+    $scope.showTransaction = false;
+
+    WalletService.find().then(function(result) {
+      $scope.showTransaction = result.length > 0;
+    });
+  });
+
   $scope.data = {
     amount: null,
     cents: null
@@ -202,17 +211,19 @@ angular.module('client')
   update();
 })
 
-.controller('NewWalletCtrl', function($scope, $state, $ionicHistory, $ionicPopup, WalletService, TrophyService) {
+.controller('NewWalletCtrl', function($scope, $state, chosen_icon, $ionicHistory, $ionicPopup, WalletService, TrophyService) {
   $scope.wallet = {
     name: ''
   };
 
-  $scope.saveWallet = function() {
-    console.log($scope.wallet.icon);
+  $scope.$on('$ionicView.beforeEnter', function() {
+    $scope.icon = chosen_icon.name || '';
+  });
 
+  $scope.saveWallet = function() {
     var name = $scope.wallet.name;
     var budget = $scope.wallet.budget;
-    var icon = $scope.wallet.icon || '';
+    var icon = $scope.icon || '';
 
     if(!name || !budget) return;
 
@@ -236,7 +247,17 @@ angular.module('client')
   };
 })
 
-.controller('WalletDetailCtrl', function($scope, $stateParams, WalletService) {
+.controller('ChooseIconCtrl', function($scope, $state, ICONS, chosen_icon) {
+  $scope.icons = ICONS;
+
+  $scope.chooseIcon = function(icon) {
+    chosen_icon.name = icon;
+    console.log(chosen_icon);
+    $state.go('inside.new_wallet');
+  };
+})
+
+.controller('WalletDetailCtrl', function($scope, $state, $stateParams, $ionicHistory, $ionicPopup, WalletService) {
   $scope.wallet = {
     name: 'default',
     budget: 0,
@@ -248,6 +269,8 @@ angular.module('client')
     amount: null,
     cents: null
   };
+
+  console.log($stateParams);
 
   $scope.max = $scope.wallet.budget;
   $scope.current = $scope.wallet.spent;
@@ -275,6 +298,25 @@ angular.module('client')
 
     WalletService.addTransaction($scope.wallet.walletId, transaction).then(function() {
       update();
+    });
+  };
+
+  $scope.deleteWallet = function() {
+    $ionicPopup.confirm({
+      title: 'Delete wallet?',
+      template: '<p>Are you sure you want to delete this wallet?</p>'
+    }).then(function(res) {
+      if(res) {
+        WalletService.delete($scope.wallet.walletId).then(function() {
+          $ionicHistory.nextViewOptions({
+            disableBack: true,
+            disableAnimate: true
+          });
+          $state.go('inside.wallets');
+        });
+      } else {
+        return;
+      }
     });
   };
 

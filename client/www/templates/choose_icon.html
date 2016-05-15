@@ -1,0 +1,9 @@
+<ion-view title="Icon">
+  <ion-content class="padding">
+    <div class="row" style="display: -webkit-flex; -webkit-flex-wrap: wrap; display: flex; flex-wrap: wrap;">
+    <div class="col col-20" ng-repeat="icon in icons" ng-click="chooseIcon(icon)">
+      <img class="trophy" ng-src="img/wallet_icons/{{ icon }}.png"/>
+    </div>
+    </div>
+  </ion-content>
+</ion-view>

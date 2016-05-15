@@ -8,13 +8,7 @@
         <input type="number" placeholder="Wallet size" ng-model="wallet.budget"/>
       </label>
     </div>
-    <div class="list">
-      <div class="item"><ion-radio ng-model="wallet.icon" ng-value="'home'"><img ng-src="img/home.png"/></div>
-      <div class="item"><ion-radio ng-model="wallet.icon" ng-value="'car'"><img ng-src="img/car.png"/></div>
-      <div class="item"><ion-radio ng-model="wallet.icon" ng-value="'dog'"><img ng-src="img/dog.png"/></div>
-      <div class="item"><ion-radio ng-model="wallet.icon" ng-value="'bill'"><img ng-src="img/bill.png"/></div>
-      <div class="item"><ion-radio ng-model="wallet.icon" ng-value="'groceries'"><img ng-src="img/groceries.png"/></div>
-    </div>
+    <button class="button button-block button-calm" ui-sref="inside.choose_icon">Icon <img class="wallet-icon" ng-if="icon" ng-src="img/wallet_icons/{{ icon }}.png"/></button>
     <button class="button button-block button-calm" ng-click="saveWallet()">Save</button>
   </ion-content>
 </ion-view>

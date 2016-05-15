@@ -45,6 +45,11 @@ angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar']
     templateUrl: 'templates/new_wallet.html',
     controller: 'NewWalletCtrl'
   })
+  .state('inside.choose_icon', {
+    url: '/choose_icon',
+    templateUrl: 'templates/choose_icon.html',
+    controller: 'ChooseIconCtrl'
+  })
   .state('inside.wallet_detail', {
     cache: false,
     url: '/wallet/:walletId',
