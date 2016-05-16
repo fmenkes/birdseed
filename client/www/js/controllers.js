@@ -39,8 +39,8 @@ angular.module('client')
       });
     }, function(errMsg) {
       if(errMsg.code === 11000)
-        // TODO: Change this to something more informative
-        errMsg = 'Username or email already in use.';
+      // TODO: Change this to something more informative
+      errMsg = 'Username or email already in use.';
 
       var alertPopup = $ionicPopup.alert({
         title: 'Registration failed',
@@ -147,38 +147,38 @@ angular.module('client')
 
 .controller('OCRCtrl', function($scope, $q, $cordovaCamera) {
   /*var getImage = function() {
-    var deferred = $q.defer();
+  var deferred = $q.defer();
 
-    var options = {
-        quality: 100,
-        destinationType: Camera.DestinationType.DATA_URL,
-        sourceType: Camera.PictureSourceType.CAMERA,
-        allowEdit: true,
-        encodingType: Camera.EncodingType.JPEG,
-        popoverOptions: CameraPopoverOptions,
-        saveToPhotoAlbum: false,
-        correctOrientation:true
-    };
+  var options = {
+  quality: 100,
+  destinationType: Camera.DestinationType.DATA_URL,
+  sourceType: Camera.PictureSourceType.CAMERA,
+  allowEdit: true,
+  encodingType: Camera.EncodingType.JPEG,
+  popoverOptions: CameraPopoverOptions,
+  saveToPhotoAlbum: false,
+  correctOrientation:true
+};
 
-    $cordovaCamera.getPicture(options).then(function(imageData) {
-      var image = document.getElementById('ocrImg');
-      image.src = "data:image/jpeg;base64," + imageData;
-      deferred.resolve(image);
-    }, function(err) {
-      deferred.reject(err.message);
-    });
+$cordovaCamera.getPicture(options).then(function(imageData) {
+var image = document.getElementById('ocrImg');
+image.src = "data:image/jpeg;base64," + imageData;
+deferred.resolve(image);
+}, function(err) {
+deferred.reject(err.message);
+});
 
-    return deferred.promise;
-  };
+return deferred.promise;
+};
 
-  $scope.testOCR = function() {
-    getImage().then(function(image) {
-      OCRAD(image, function(text) {
-        console.log(text);
-        alert(text);
-      });
-    });
-  };*/
+$scope.testOCR = function() {
+getImage().then(function(image) {
+OCRAD(image, function(text) {
+console.log(text);
+alert(text);
+});
+});
+};*/
 })
 
 .controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $state) {
@@ -230,19 +230,20 @@ angular.module('client')
     WalletService.insert(name, budget, icon).then(function() {
       TrophyService.userHasTrophy("firstWallet").then(function(hasTrophy) {
         if(!hasTrophy) {
-          $ionicPopup.alert({
-            title: "New trophy!",
-            template: "<p>You created your first wallet!</p>"
-          }).then(function() {
-            TrophyService.insert("firstWallet", "trophy");
+          TrophyService.insert("firstWallet", "trophy").then(function() {
+            $ionicPopup.alert({
+              title: "New trophy!",
+              template: "<p>You created your first wallet!</p>"
+            });
           });
         }
-
-        $ionicHistory.nextViewOptions({
-          disableBack: true
-        });
-        $state.go('inside.wallets');
       });
+
+      $ionicHistory.nextViewOptions({
+        disableBack: true
+      });
+      
+      $state.go('inside.wallets');
     });
   };
 })

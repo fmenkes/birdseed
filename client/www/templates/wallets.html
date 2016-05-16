@@ -4,9 +4,12 @@
       Create new Wallet
     </button>
     <ul class="list">
-      <li class="item" ui-sref="inside.wallet_detail({walletId: wallet.walletId})" ng-repeat="wallet in wallets">
-        <img ng-if="wallet.icon" ng-src="img/wallet_icons/{{ wallet.icon }}.png"/> <span>{{ wallet.name }}: {{ wallet.spent | numberFormat }}/{{ wallet.budget }}</span>
-      </li>
+      <div ng-repeat="wallet in wallets">
+        <li class="item" ui-sref="inside.wallet_detail({walletId: wallet.walletId})" >
+          <img ng-if="wallet.icon" ng-src="img/wallet_icons/{{ wallet.icon }}.png"/> <span>{{ wallet.name }}: {{ wallet.spent | numberFormat }}/{{ wallet.budget }}</span>
+        </li>
+        <wallet-progress wallet="wallet"></wallet-progress>
+      </div>
     </ul>
   </ion-content>
 </ion-view>
