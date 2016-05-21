@@ -5,11 +5,23 @@ describe('E2E tests', function() {
     element(by.id('loginButton')).click();
   };
 
+  var loginIncorrect = function() {
+    element(by.id('username')).sendKeys("wronguser");
+    element(by.id('password')).sendKeys("wrongpassword");
+    element(by.id('loginButton')).click();
+  };
+
   beforeEach(function() {
     browser.get('http://localhost:8100/');
   });
 
   describe('Login page', function() {
+    it('should show a popup on failed log in', function() {
+      loginIncorrect();
+
+      expect(element(by.css('.popup-body span')).getText()).toEqual('Authentication failed. User not found.');
+    });
+
     it('should be able to log in', function() {
       var loginUrl = browser.getCurrentUrl();
 
@@ -52,6 +64,7 @@ describe('E2E tests', function() {
   describe('Trophies', function() {
     it('should have a trophy for creating a wallet', function() {
       element(by.xpath("//*[@nav-bar='active']//*//div//span//button")).click();
+
       element(by.cssContainingText('.item', 'Trophies')).click();
 
       var row = element.all(by.css('.trophies div img'));

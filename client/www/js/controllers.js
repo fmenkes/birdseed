@@ -40,7 +40,7 @@ angular.module('client')
     }, function(errMsg) {
       if(errMsg.code === 11000)
       // TODO: Change this to something more informative
-      errMsg = 'Username or email already in use.';
+        errMsg = 'Username or email already in use.';
 
       var alertPopup = $ionicPopup.alert({
         title: 'Registration failed',
@@ -181,9 +181,18 @@ alert(text);
 };*/
 })
 
-.controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $state) {
+.controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $ionicPopup, $state, TrophyService) {
   $scope.updateIncome = function() {
     Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
+      TrophyService.giveTrophy("setIncome").then(function(desc) {
+        $ionicPopup.alert({
+          title: "New trophy!",
+          template: "<p>" + desc + "</p>"
+        });
+      }, function(msg) {
+        console.log(msg);
+      });
+
       $ionicHistory.nextViewOptions({
         disableBack: true,
         disableAnimate: true
@@ -227,22 +236,35 @@ alert(text);
 
     if(!name || !budget) return;
 
-    WalletService.insert(name, budget, icon).then(function() {
-      TrophyService.userHasTrophy("firstWallet").then(function(hasTrophy) {
-        if(!hasTrophy) {
-          TrophyService.insert("firstWallet", "trophy").then(function() {
-            $ionicPopup.alert({
-              title: "New trophy!",
-              template: "<p>You created your first wallet!</p>"
-            });
+    WalletService.insert(name, budget, icon).then(function(wallets) {
+      console.log(wallets);
+
+      if(wallets === 1) {
+        // TrophyService returns a resolved promise if it finds the trophy, otherwise
+        // returns a rejected promise.
+        TrophyService.giveTrophy("firstWallet").then(function(desc) {
+          $ionicPopup.alert({
+            title: "New trophy!",
+            template: "<p>" + desc + "</p>"
           });
-        }
-      });
+        }, function(msg) {
+          console.log(msg);
+        });
+      } else if(wallets >= 5) {
+        TrophyService.giveTrophy("fiveWallets").then(function(desc) {
+          $ionicPopup.alert({
+            title: "New trophy!",
+            template: "<p>" + desc + "</p>"
+          });
+        }, function(msg) {
+          console.log(msg);
+        });
+      }
 
       $ionicHistory.nextViewOptions({
         disableBack: true
       });
-      
+
       $state.go('inside.wallets');
     });
   };
@@ -336,12 +358,12 @@ alert(text);
   //TODO: add wallet.description
   $scope.showPopup = function(trophy) {
     $scope.trophy = trophy;
-    var title = trophy.name;
+    var title = trophy.plainName;
 
     $ionicPopup.show({
       scope: $scope,
       title: title,
-      template: "<img class='trophy' ng-src='img/{{ trophy.icon }}.png'><br><p>You've created your first wallet!</p>",
+      template: "<img class='trophy' ng-src='img/trophy_icons/{{ trophy.name }}.png'><br><p>{{ trophy.desc }}</p>",
       buttons: [{ text: 'OK', type: 'button-calm', onTap: function(e) { return; } }]
     });
   };

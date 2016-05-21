@@ -14,6 +14,25 @@ angular.module('client')
   'home', 'bill', 'car', 'dog', 'groceries', 'male', 'female', 'star'
 ])
 
+.constant('TROPHIES', [
+  { name: 'firstWallet',
+    plainName: 'First wallet',
+    desc: "You've created your first wallet!"
+  },
+  { name: 'fiveWallets',
+    plainName: 'Five wallets',
+    desc: "You've created five wallets! Diligent!"
+  },
+  { name: 'fullWallet',
+    plainName: 'Full up',
+    desc: "You reached a wallet limit! That's OK, next time you'll do better."
+  },
+  { name: 'setIncome',
+    plainName: 'Set your income',
+    desc: 'You set your monthly income! Make sure you update it when you get a raise!'
+  }
+])
+
 .value('chosen_icon', {
   name: ''
 })

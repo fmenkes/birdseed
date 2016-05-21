@@ -21,7 +21,8 @@ angular.module('client')
     '(userId TEXT PRIMARY KEY, ' +
     'username TEXT, ' +
     'savings DECIMAL(18,2) DEFAULT 0, ' +
-    'income DECIMAL(18,2) DEFAULT 0)';
+    'income DECIMAL(18,2) DEFAULT 0, ' +
+    'wallets INTEGER DEFAULT 0)';
 
     var tokenQuery = 'CREATE TABLE IF NOT EXISTS tokens ' +
     '(tokenId INTEGER PRIMARY KEY, ' +
@@ -32,8 +33,9 @@ angular.module('client')
     var trophyQuery = 'CREATE TABLE IF NOT EXISTS trophies ' +
     '(trophyId INTEGER PRIMARY KEY, ' +
     'name TEXT, ' +
+    'plainName TEXT, ' +
+    'desc TEXT, ' +
     'user TEXT, ' +
-    'icon TEXT, ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
     var walletQuery = 'CREATE TABLE IF NOT EXISTS wallets ' +
@@ -185,6 +187,8 @@ angular.module('client')
     var query = 'INSERT INTO wallets (name, budget, icon, spent, user) VALUES (?, ?, ?, ?, ?)';
     var args = [name, budget, icon, 0, user.id];
 
+    // Return the amount of wallets a user has.
+    // Maybe actually a very bad way of doing it?
     return DB.query(query, args).then(function(result) {
       return result.insertId;
     });
@@ -259,7 +263,7 @@ angular.module('client')
   };
 })
 
-.service('TrophyService', function(DB, user) {
+.service('TrophyService', function(DB, user, TROPHIES, $q) {
   var getAllTrophies = function() {
     var query = 'SELECT * FROM trophies WHERE user = ?';
     var args = [user.id];
@@ -275,6 +279,47 @@ angular.module('client')
     }, function(err) {
       console.log(err.message);
     });
+  };
+
+  var giveTrophy = function(trophyName) {
+    var deferred = $q.defer();
+    var trophy = null;
+
+    TROPHIES.forEach(function(t) {
+      if(t.name === trophyName) {
+        trophy = t;
+        return;
+      }
+    });
+
+    if(!trophy) {
+      var errmsg = "Error: trophy " + trophyName + " not found.";
+
+      deferred.reject(errmsg);
+      return deferred.promise;
+    }
+
+    var query = 'SELECT * FROM trophies WHERE name = ? AND user = ?';
+    var args = [trophyName, user.id];
+
+    DB.query(query, args).then(function(result) {
+      if(result.rows.length === 0) {
+        var insertQuery = 'INSERT INTO trophies (name, plainName, desc, user) VALUES (?, ?, ?, ?)';
+        var insertArgs = [trophy.name, trophy.plainName, trophy.desc, user.id];
+
+        DB.query(insertQuery, insertArgs).then(function() {
+          deferred.resolve(trophy.desc);
+        }, function(err) {
+          deferred.reject(err.message);
+        });
+      } else {
+        deferred.reject("User already has trophy.");
+      }
+    }, function(err) {
+      deferred.reject(err.message);
+    });
+
+    return deferred.promise;
   };
 
   var userHasTrophy = function(trophy) {
@@ -311,6 +356,7 @@ angular.module('client')
   return {
     userHasTrophy: userHasTrophy,
     insert: addTrophy,
+    giveTrophy: giveTrophy,
     find: getAllTrophies,
     deleteAll: deleteAll
   };
