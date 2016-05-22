@@ -51,7 +51,6 @@ angular.module('client')
 })
 
 .controller('InsideCtrl', function($scope, AuthService, $ionicHistory, $ionicSideMenuDelegate, $state, Auth, user) {
-
   $scope.logout = function() {
     AuthService.logout();
     $ionicHistory.nextViewOptions({
@@ -67,18 +66,20 @@ angular.module('client')
 
   $scope.user = user;
 
-  var update = function() {
+  $scope.getUser = function() {
     Auth.getUser(user.id).then(function(result) {
       $scope.user.income = result.income;
       $scope.user.savings = result.savings;
     });
   };
 
-  update();
+  $scope.getUser();
 })
 
-.controller('MainCtrl', function($scope, DB, Auth, WalletService) {
+.controller('MainCtrl', function($scope, DB, Auth, WalletService, MonthlyService) {
   $scope.$on('$ionicView.beforeEnter', function() {
+    $scope.getUser();
+
     $scope.showTransaction = false;
 
     WalletService.find().then(function(result) {
@@ -90,6 +91,8 @@ angular.module('client')
     amount: null,
     cents: null
   };
+
+  var update = $scope.$parent.update;
 
   $scope.saveIncome = function() {
     var transaction = $scope.data;

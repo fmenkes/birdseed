@@ -72,7 +72,7 @@ describe('E2E tests', function() {
 
       row.get(0).click();
 
-      expect(element(by.css('.popup-title')).getText()).toEqual('firstWallet');
+      expect(element(by.css('.popup-title')).getText()).toEqual('First wallet');
     });
   });
 

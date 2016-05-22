@@ -47,13 +47,22 @@ angular.module('client')
     'spent DECIMAL(18,2), ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
+    var dateQuery = 'CREATE TABLE IF NOT EXISTS timeStamps ' +
+    '(timeStamp TEXT, ' +
+    'user TEXT, ' +
+    'FOREIGN KEY(user) REFERENCES users(userId))';
+
     // Really ugly, but maybe best way to do it?
     db.transaction(function(tx) {
       tx.executeSql(userQuery, [], function() {
         tx.executeSql(tokenQuery, [], function() {
           tx.executeSql(trophyQuery, [], function() {
             tx.executeSql(walletQuery, [], function() {
-              deferred.resolve("All tables created successfully.");
+              tx.executeSql(dateQuery, [], function() {
+                deferred.resolve("All tables created successfully.");
+              }, function(tx, e) {
+                deferred.reject(e.message);
+              });
             }, function(tx, e) {
               deferred.reject(e.message);
             });
@@ -67,8 +76,6 @@ angular.module('client')
         deferred.reject(e.message);
       });
     });
-
-    //this.dropTables();
 
     return deferred.promise;
   };
@@ -89,6 +96,12 @@ angular.module('client')
     });
     db.transaction(function(tx) {
       tx.executeSql('DROP TABLE IF EXISTS wallets');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS months');
+    });
+    db.transaction(function(tx) {
+      tx.executeSql('DROP TABLE IF EXISTS timeStamps');
     });
   };
 
@@ -127,8 +140,6 @@ angular.module('client')
     var args = [];
 
     return DB.query(query, args).then(function(result) {
-      console.log(result);
-
       if(result.rows.length > 0) return result.rows.item(0);
 
       return null;
@@ -145,13 +156,37 @@ angular.module('client')
   };
 
   this.insertUser = function(userId) {
-    var query = 'INSERT INTO users (userId) VALUES (?)';
+    var query = 'INSERT OR IGNORE INTO users (userId) VALUES (?)';
     var args = [userId];
 
-    console.log(userId);
+    return DB.query(query, args).then(function(result) {
+      //return this.insertTimestamp(userId);
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  this.insertFirstTimestamp = function(userId) {
+    //debugger;
+    var query = 'INSERT INTO timeStamps (timeStamp, user) ' +
+    'SELECT ?, ? ' +
+    'WHERE NOT EXISTS(SELECT * FROM timeStamps WHERE user = ?)';
+    var args = [new Date(), userId, userId];
 
     return DB.query(query, args).then(function(result) {
-      return result.insertId;
+
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  this.insertTimestamp = function(userId) {
+    console.log("inserting timestamp");
+    var query = 'INSERT INTO timeStamps (timeStamp, user) VALUES (?, ?)';
+    var args = [new Date(), userId];
+
+    return DB.query(query, args).then(function() {
+
     }, function(err) {
       console.log(err.message);
     });
@@ -206,6 +241,19 @@ angular.module('client')
     var args = [amount, id];
 
     return DB.query(query, args).then(function(result) {
+      var savings = user.savings - amount > 0 ? user.savings - amount : 0;
+
+      return Auth.updateFinance(user.id, user.income, savings);
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var emptyWallets = function() {
+    var query = 'UPDATE wallets SET spent = 0 WHERE user = ?';
+    var args = [user.id];
+
+    return DB.query(query, args).then(function(result) {
 
     }, function(err) {
       console.log(err.message);
@@ -258,6 +306,7 @@ angular.module('client')
     delete: deleteWallet,
     find: getAllWallets,
     findOne: getWallet,
+    emptyWallets: emptyWallets,
     deleteAll: deleteAllWallets,
     addTransaction: addTransaction
   };
@@ -362,7 +411,56 @@ angular.module('client')
   };
 })
 
-.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT, user) {
+.service('MonthlyService', function($q, DB, WalletService, Auth, user) {
+  // A messy service, but it makes sure that the user's finance is updated
+  // before entering the first view!
+
+  function emptyWallets() {
+    WalletService.emptyWallets();
+  }
+
+  function addIncome() {
+    console.log(user);
+
+    return Auth.getUser(user.id).then(function(u) {
+      console.log(u);
+      var savings = u.savings + u.income;
+      return Auth.updateFinance(user.id, u.income, savings).then(function(result) {
+        return;
+      });
+    });
+  }
+
+  function update() {
+    emptyWallets();
+    return addIncome();
+  }
+
+  var checkDate = function() {
+    //debugger;
+    var query = 'SELECT * FROM timeStamps WHERE user = ? ORDER BY rowid DESC LIMIT 1';
+    var args = [user.id];
+
+    return DB.query(query, args).then(function(result) {
+      var now = new Date();
+      var date = new Date(result.rows.item(0).timeStamp);
+
+      if(now > date && (now.getMonth() > date.getMonth() || now.getFullYear() > date.getFullYear())) {
+        return Auth.insertTimestamp(user.id).then(function() {
+          return update();
+        });
+      }
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  return {
+    checkDate: checkDate
+  };
+})
+
+.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT, MonthlyService, user) {
   var isAuthenticated = false;
   var authToken;
 
@@ -381,6 +479,12 @@ angular.module('client')
 
     // Set token as default header
     $http.defaults.headers.common.Authorization = authToken;
+
+    return Auth.insertFirstTimestamp(userId).then(function() {
+      return MonthlyService.checkDate().then(function() {
+        return;
+      });
+    });
   }
 
   function destroyUserCredentials() {
@@ -394,8 +498,9 @@ angular.module('client')
     return $q(function(resolve, reject) {
       Auth.findToken().then(function(token) {
         if(token) {
-          useCredentials(token.user, token.token);
-          resolve("User Authenticated");
+          useCredentials(token.user, token.token).then(function() {
+            resolve("User Authenticated");
+          });
         } else {
           reject();
         }

@@ -89,8 +89,10 @@ angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar']
   $timeout,
   $location,
   $cordovaSQLite,
+  $cordovaLocalNotification,
   DB,
   AuthService,
+  MonthlyService,
   API_ENDPOINT_URL,
   API_ENDPOINT,
   AUTH_EVENTS) {
@@ -124,6 +126,35 @@ angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar']
       if(window.StatusBar) {
         StatusBar.styleDefault();
       }
+
+      /*if(window.cordova) {
+
+        cordova.plugins.notification.local.getAllScheduled(function(notifications) {
+          console.log(notifications);
+
+          if(notifications.length < 1) {
+            var now = new Date().getTime();
+            var three_minutes_from_now = new Date(now + (60 * 3 * 1000));
+
+            // Set the local notification that will handle updating data monthly
+            cordova.plugins.notification.local.schedule({
+              id: 1,
+              title: "Wallets updated!",
+              text: "This is the message",
+              every: "minute",
+              firstAt: three_minutes_from_now
+            });
+          }
+
+          cordova.plugins.notification.local.on("trigger", function(notification) {
+            console.log("Notification fired: " + JSON.stringify(notification));
+            MonthlyService.update();
+          });
+        });
+      }*/
+
+      // Check if it is a new month
+
 
       // Set the API endpoint depending on if we're on mobile or browser
       if(ionic.Platform.isAndroid() || ionic.Platform.isIOS()) {
