@@ -1,8 +1,14 @@
 var express = require('express'),
     jwt     = require('jwt-simple'),
-    secret  = require('../../../config/keys').secret,
     User    = require('../../../models/User'),
-    router  = express.Router();
+    router  = express.Router(),
+    secret;
+
+if(!process.env.HEROKU_SECRET) {
+  secret = require('../../../config/keys').secret;
+} else {
+  secret = process.env.HEROKU_SECRET;
+}
 
 router.get('/', function(req, res) {
   res.send("This is the login route.");

@@ -2,8 +2,14 @@ var express = require('express'),
     User    = require('../../models/User'),
     passport = require('passport'),
     jwt = require('jwt-simple'),
-    secret = require('../../config/keys').secret,
+    secret,
     router  = express.Router();
+
+if(!process.env.HEROKU_SECRET) {
+  secret = require('../../config/keys').secret;
+} else {
+  secret = process.env.HEROKU_SECRET;
+}
 
 router.get('/', passport.authenticate('jwt', { session: false }), function(req, res) {
   var token = getToken(req.headers);
