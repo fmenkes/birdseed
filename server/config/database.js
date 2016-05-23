@@ -1,10 +1,18 @@
-var keys = require('./keys'),
-    mongoose = require('mongoose');
+var mongoose = require('mongoose');
+var mongo_password;
 
 // Having special characters in the mongodb password will crash the server.
 // Probably fixed by passing options?
 
 // mLab recommended connection options: https://gist.github.com/mongolab-org/9959376
+
+console.log(process.env.HEROKU_MONGO_PASSWORD);
+
+if(!process.env.HEROKU_MONGO_PASSWORD) {
+  mongo_password = require('./keys').MONGO_PASSWORD;
+} else {
+  mongo_password = process.env.HEROKU_MONGO_PASSWORD;
+}
 
 var url = '',
     options = {};
@@ -17,7 +25,7 @@ if(process.env.NODE_ENV === 'testing') {
     server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
     replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS : 30000 } },
     user: 'fmenkes',
-    pass: keys.MONGO_PASSWORD
+    pass: mongo_password
   };
 }
 

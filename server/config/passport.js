@@ -2,7 +2,15 @@ var JwtStrategy = require('passport-jwt').Strategy,
     ExtractJwt = require('passport-jwt').ExtractJwt;
 
 var User = require('../models/User');
-var secret = require('./keys').secret;
+var secret;
+
+console.log(process.env.HEROKU_SECRET);
+
+if(!process.env.HEROKU_SECRET) {
+  secret = require('./keys').secret;
+} else {
+  secret = process.env.HEROKU_SECRET;
+}
 
 // passport config from https://devdactic.com/restful-api-user-authentication-1/
 
