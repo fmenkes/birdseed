@@ -293,22 +293,34 @@ alert(text);
 
   $scope.data = {
     amount: null,
-    cents: null
+    cents: null,
+    showUndo: false
   };
-
-  console.log($stateParams);
 
   $scope.max = $scope.wallet.budget;
   $scope.current = $scope.wallet.spent;
 
+  $scope.undoLastTransaction = function() {
+    WalletService.undoLastTransaction($scope.wallet.walletId).then(function() {
+      update();
+    });
+  };
+
   var update = function() {
     WalletService.findOne($stateParams.walletId).then(function(result) {
+      var show = result.lastTransaction > 0;
+
       $scope.wallet = result;
       $scope.data = {
         amount: null,
-        cents: null
+        cents: null,
+        showUndo: show
       };
+
+      console.log($scope.data.showUndo);
     });
+
+
   };
 
   $scope.newTransaction = function() {

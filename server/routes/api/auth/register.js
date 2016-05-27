@@ -21,7 +21,7 @@ router.post('/', function(req, res) {
     // Save the user in the database.
     newUser.save(function(err) {
       if(err) {
-        console.log(err);
+        console.log("Error: " + err);
         return res.json({ success: false, msg: err.message });
       }
 

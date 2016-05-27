@@ -38,6 +38,13 @@ angular.module('client')
     'user TEXT, ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
+    var accountQuery = 'CREATE TABLE IF NOT EXISTS accounts ' +
+    '(accountId INTEGER PRIMARY KEY, ' +
+    'name TEXT, ' +
+    'amount DECIMAL(18,2) DEFAULT 0, ' +
+    'user TEXT, ' +
+    'FOREIGN KEY(user) REFERENCES users(userId))';
+
     var walletQuery = 'CREATE TABLE IF NOT EXISTS wallets ' +
     '(walletId INTEGER PRIMARY KEY, ' +
     'name TEXT, ' +
@@ -45,14 +52,26 @@ angular.module('client')
     'user TEXT, ' +
     'budget DECIMAL(18,2), ' +
     'spent DECIMAL(18,2), ' +
+    'lastTransaction DECIMAL(18,2) DEFAULT 0, ' +
+    'account INTEGER, ' +
+    'FOREIGN KEY(account) REFERENCES accounts(accountId), ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
+
+    /*var historyQuery = 'CREATE TABLE IF NOT EXISTS history ' +
+    '(wallet INTEGER, ' +
+    'user TEXT, ' +
+    'timeStamp TEXT, ' +
+    'transaction DECIMAL(18,2))';*/
 
     var dateQuery = 'CREATE TABLE IF NOT EXISTS timeStamps ' +
     '(timeStamp TEXT, ' +
     'user TEXT, ' +
     'FOREIGN KEY(user) REFERENCES users(userId))';
 
-    // Really ugly, but maybe best way to do it?
+    // Really ugly, but maybe best way to do it? The problem is that you can't
+    // batch execute sql queries in SQLite (as far as I can tell), so this way
+    // assures that each transaction is completed in a row, and if one fails
+    // we can easily tell.
     db.transaction(function(tx) {
       tx.executeSql(userQuery, [], function() {
         tx.executeSql(tokenQuery, [], function() {
@@ -98,7 +117,7 @@ angular.module('client')
       tx.executeSql('DROP TABLE IF EXISTS wallets');
     });
     db.transaction(function(tx) {
-      tx.executeSql('DROP TABLE IF EXISTS months');
+      tx.executeSql('DROP TABLE IF EXISTS accounts');
     });
     db.transaction(function(tx) {
       tx.executeSql('DROP TABLE IF EXISTS timeStamps');
@@ -217,13 +236,15 @@ angular.module('client')
   return this;
 })
 
+.service('AccountService', function(DB, user) {
+
+})
+
 .service('WalletService', function($q, DB, Auth, user) {
   var insertWallet = function(name, budget, icon) {
     var query = 'INSERT INTO wallets (name, budget, icon, spent, user) VALUES (?, ?, ?, ?, ?)';
     var args = [name, budget, icon, 0, user.id];
 
-    // Return the amount of wallets a user has.
-    // Maybe actually a very bad way of doing it?
     return DB.query(query, args).then(function(result) {
       return result.insertId;
     });
@@ -233,12 +254,16 @@ angular.module('client')
     var query = 'DELETE FROM wallets WHERE walletId=?';
     var args = [id];
 
-    return DB.query(query, args);
+    return DB.query(query, args).then(function() {
+
+    }, function(err) {
+      console.log(err.message);
+    });
   };
 
   var addTransaction = function(id, amount) {
-    var query = 'UPDATE wallets SET spent = spent + ? WHERE walletId = ?';
-    var args = [amount, id];
+    var query = 'UPDATE wallets SET spent = spent + ?, lastTransaction = ? WHERE walletId = ?';
+    var args = [amount, amount, id];
 
     return DB.query(query, args).then(function(result) {
       var savings = user.savings - amount > 0 ? user.savings - amount : 0;
@@ -246,6 +271,24 @@ angular.module('client')
       return Auth.updateFinance(user.id, user.income, savings);
     }, function(err) {
       console.log(err.message);
+    });
+  };
+
+  var undoLastTransaction = function(id) {
+    return getWallet(id).then(function(result) {
+      var query = 'UPDATE wallets SET spent = spent - lastTransaction, lastTransaction = 0 WHERE walletId = ?';
+      var args = [id];
+      var savings = user.savings + result.lastTransaction;
+
+      return DB.query(query, args).then(function(result) {
+        return Auth.updateFinance(user.id, user.income, savings).then(function() {
+          //return;
+        }, function(err) {
+          console.log(err.message);
+        });
+      }, function(err) {
+        console.log(err.message);
+      });
     });
   };
 
@@ -294,7 +337,6 @@ angular.module('client')
     var args = [id];
 
     return DB.query(query, args).then(function(result) {
-      console.log(result);
       return result.rows.item(0);
     }, function(err) {
       console.log("Error: " + err.message);
@@ -308,7 +350,8 @@ angular.module('client')
     findOne: getWallet,
     emptyWallets: emptyWallets,
     deleteAll: deleteAllWallets,
-    addTransaction: addTransaction
+    addTransaction: addTransaction,
+    undoLastTransaction: undoLastTransaction
   };
 })
 

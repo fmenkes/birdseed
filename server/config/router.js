@@ -19,7 +19,7 @@ console.log("Setting up routes...");
 glob.sync('./routes/**/*.js').forEach(function(file) {
   var route = require(path.resolve(file));
   var routeName = /(?:\/routes)(\/.+)(?:\.js)/.exec(file)[1];
-  console.log(routeName);
+  console.log("Route established: " + routeName);
   router.use(routeName, route);
 });
 

@@ -6,8 +6,6 @@ var mongo_password;
 
 // mLab recommended connection options: https://gist.github.com/mongolab-org/9959376
 
-console.log(process.env.HEROKU_MONGO_PASSWORD);
-
 if(!process.env.HEROKU_MONGO_PASSWORD) {
   mongo_password = require('./keys').MONGO_PASSWORD;
 } else {

@@ -6,6 +6,7 @@
     <round-progress max="wallet.budget" current="wallet.spent" semi="true" color="#003366"></round-progress>
     <div class="progress-data"><span>{{ wallet.spent | numberFormat }} / {{ wallet.budget | numberFormat }}</span></div>
     </div>
+    <button class="button button-clear button-full button-small" ng-if="data.showUndo" ng-click="undoLastTransaction()">Undo Last Transaction</button>
   <div class="list">
     <div class="row">
     <label class="col col-75 item item-input">

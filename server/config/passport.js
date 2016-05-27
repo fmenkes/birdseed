@@ -4,8 +4,6 @@ var JwtStrategy = require('passport-jwt').Strategy,
 var User = require('../models/User');
 var secret;
 
-console.log(process.env.HEROKU_SECRET);
-
 if(!process.env.HEROKU_SECRET) {
   secret = require('./keys').secret;
 } else {
