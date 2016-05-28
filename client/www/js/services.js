@@ -99,7 +99,7 @@ angular.module('client')
     return deferred.promise;
   };
 
-  // Drop the database.
+  // Drop the database. STRICTLY DEBUG!
   this.dropTables = function() {
     db.transaction(function(tx) {
       tx.executeSql('DROP TABLE IF EXISTS budgets');
@@ -240,7 +240,7 @@ angular.module('client')
 
 })
 
-.service('WalletService', function($q, DB, Auth, user) {
+.service('WalletService', function($q, DB, Auth, TrophyService, $ionicPopup, user) {
   var insertWallet = function(name, budget, icon) {
     var query = 'INSERT INTO wallets (name, budget, icon, spent, user) VALUES (?, ?, ?, ?, ?)';
     var args = [name, budget, icon, 0, user.id];
@@ -266,9 +266,20 @@ angular.module('client')
     var args = [amount, amount, id];
 
     return DB.query(query, args).then(function(result) {
-      var savings = user.savings - amount > 0 ? user.savings - amount : 0;
+      var savings = user.savings - amount;
 
-      return Auth.updateFinance(user.id, user.income, savings);
+      Auth.updateFinance(user.id, user.income, savings).then(function() {
+        getWallet(id).then(function(result) {
+          if(result.spent >= result.budget) {
+            TrophyService.giveTrophy('fullWallet').then(function(desc) {
+              $ionicPopup.alert({
+                title: "New trophy!",
+                template: "<p>" + desc + "</p>"
+              });
+            });
+          }
+        });
+      });
     }, function(err) {
       console.log(err.message);
     });
@@ -280,9 +291,9 @@ angular.module('client')
       var args = [id];
       var savings = user.savings + result.lastTransaction;
 
-      return DB.query(query, args).then(function(result) {
-        return Auth.updateFinance(user.id, user.income, savings).then(function() {
-          //return;
+      DB.query(query, args).then(function(result) {
+        Auth.updateFinance(user.id, user.income, savings).then(function() {
+
         }, function(err) {
           console.log(err.message);
         });
@@ -293,7 +304,7 @@ angular.module('client')
   };
 
   var emptyWallets = function() {
-    var query = 'UPDATE wallets SET spent = 0 WHERE user = ?';
+    var query = 'UPDATE wallets SET spent = 0, lastTransaction = 0 WHERE user = ?';
     var args = [user.id];
 
     return DB.query(query, args).then(function(result) {
@@ -468,34 +479,42 @@ angular.module('client')
     return Auth.getUser(user.id).then(function(u) {
       console.log(u);
       var savings = u.savings + u.income;
-      return Auth.updateFinance(user.id, u.income, savings).then(function(result) {
-        return;
+      Auth.updateFinance(user.id, u.income, savings).then(function(result) {
       });
     });
   }
 
   function update() {
     emptyWallets();
-    return addIncome();
+    addIncome();
   }
 
   var checkDate = function() {
-    //debugger;
+    var deferred = $q.defer();
+
     var query = 'SELECT * FROM timeStamps WHERE user = ? ORDER BY rowid DESC LIMIT 1';
     var args = [user.id];
 
-    return DB.query(query, args).then(function(result) {
+    DB.query(query, args).then(function(result) {
       var now = new Date();
       var date = new Date(result.rows.item(0).timeStamp);
 
       if(now > date && (now.getMonth() > date.getMonth() || now.getFullYear() > date.getFullYear())) {
-        return Auth.insertTimestamp(user.id).then(function() {
-          return update();
+        Auth.insertTimestamp(user.id).then(function() {
+          update();
+          deferred.resolve('New month.');
+        }, function(err) {
+          deferred.reject(err.message);
         });
+      } else {
+        deferred.reject('Not new month.');
       }
     }, function(err) {
+      deferred.reject(err.message);
       console.log(err.message);
     });
+
+    return deferred.promise;
   };
 
   return {
@@ -503,7 +522,7 @@ angular.module('client')
   };
 })
 
-.service('AuthService', function($q, $http, Auth, $ionicPlatform, API_ENDPOINT, MonthlyService, user) {
+.service('AuthService', function($q, $http, Auth, $ionicPlatform, $ionicPopup, API_ENDPOINT, MonthlyService, TrophyService, user) {
   var isAuthenticated = false;
   var authToken;
 
@@ -524,8 +543,13 @@ angular.module('client')
     $http.defaults.headers.common.Authorization = authToken;
 
     return Auth.insertFirstTimestamp(userId).then(function() {
-      return MonthlyService.checkDate().then(function() {
-        return;
+      MonthlyService.checkDate().then(function() {
+        TrophyService.giveTrophy('firstMonth').then(function(desc) {
+          $ionicPopup.alert({
+            title: "New trophy!",
+            template: "<p>" + desc + "</p>"
+          });
+        });
       });
     });
   }

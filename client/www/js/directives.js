@@ -27,7 +27,8 @@ angular.module('client')
        width: width + '%',
        height: '4px',
        backgroundColor: color,
-       display: 'block'
+       display: 'block',
+       marginBottom: '5px'
       });
     }
   };

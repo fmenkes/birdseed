@@ -25,11 +25,16 @@ angular.module('client')
   },
   { name: 'fullWallet',
     plainName: 'Full up',
-    desc: "You reached a wallet limit! That's OK, next time you'll do better."
+    desc: "You reached a wallet limit! Just try not to go over!"
   },
   { name: 'setIncome',
     plainName: 'Set your income',
     desc: 'You set your monthly income! Make sure you update it when you get a raise!'
+  },
+  {
+    name: 'firstMonth',
+    plainName: 'Your first month',
+    desc: 'You made it to the end of the first month!'
   }
 ])
 
