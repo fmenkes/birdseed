@@ -32,6 +32,14 @@ input[type=number]::-webkit-inner-spin-button {
   transform: translateX(25%) translateY(25%);
 }
 
+.wallet-span, .wallet-img {
+  vertical-align: middle;
+}
+
+.icon-item {
+  margin-bottom: 5px;
+}
+
 .progress {
   position: absolute;
   top: 50%;
@@ -39,8 +47,8 @@ input[type=number]::-webkit-inner-spin-button {
   transform: translateX(-50%) translateY(-50%);
 }
 
-.header-item {
-  color: black !important;
+.popup-body input {
+  padding: 5px;
 }
 
 .transaction-input {

@@ -1,10 +1,10 @@
 <ion-view>
-  <ion-nav-title>{{ wallet.name }}</ion-nav-title>
+  <ion-nav-title ng-click="changeName()">{{ wallet.name }}</ion-nav-title>
   <ion-content class="padding">
     <div class="progress-wrapper">
-      <!--div class="progress ng-cloak">{{ wallet.spent | numberFormat }}<br>{{ wallet.budget }}</div-->
-    <round-progress max="wallet.budget" current="wallet.spent" semi="true" color="#003366"></round-progress>
-    <div class="progress-data"><span>{{ wallet.spent | numberFormat }} / {{ wallet.budget | numberFormat }}</span></div>
+      <div class="progress ng-cloak" ng-if="wallet.icon != ''"><img ng-src="img/wallet_icons/{{ wallet.icon }}.png"></div>
+    <round-progress ui-sref="inside.choose_icon" max="wallet.budget" current="wallet.spent" semi="true" color="#003366"></round-progress>
+    <div ng-click="changeSize()" class="progress-data"><span>{{ wallet.spent | numberFormat }} / {{ wallet.budget | numberFormat }}</span></div>
     </div>
   <div class="list">
     <div class="row">

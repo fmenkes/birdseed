@@ -64,6 +64,12 @@ angular.module('client')
     $ionicSideMenuDelegate.toggleRight();
   };
 
+  $scope.changeName = function($event) {
+    console.log($scope);
+    console.log($state.current.name);
+    console.log("Inside Ctrl " + $event.target.className);
+  };
+
   $scope.user = user;
 
   $scope.getUser = function() {
@@ -76,7 +82,7 @@ angular.module('client')
   $scope.getUser();
 })
 
-.controller('MainCtrl', function($scope, DB, Auth, WalletService, MonthlyService) {
+.controller('MainCtrl', function($scope, DB, Auth, WalletService, MonthlyService, TrophyService) {
   $scope.$on('$ionicView.beforeEnter', function() {
     $scope.getUser();
 
@@ -110,6 +116,19 @@ angular.module('client')
         amount: null,
         cents: null
       };
+    });
+  };
+
+  $scope.updateIncome = function() {
+    Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
+      TrophyService.giveTrophy("setIncome").then(function(desc) {
+        $ionicPopup.alert({
+          title: "New trophy!",
+          template: "<p>" + desc + "</p>"
+        });
+      }, function(msg) {
+        console.log(msg);
+      });
     });
   };
 
@@ -273,13 +292,20 @@ alert(text);
   };
 })
 
-.controller('ChooseIconCtrl', function($scope, $state, ICONS, chosen_icon) {
+.controller('ChooseIconCtrl', function($scope, $state, $ionicHistory, ICONS, chosen_icon, WalletService) {
   $scope.icons = ICONS;
 
   $scope.chooseIcon = function(icon) {
-    chosen_icon.name = icon;
-    console.log(chosen_icon);
-    $state.go('inside.new_wallet');
+    icon = icon || '';
+
+    if($ionicHistory.backView().stateName === 'inside.new_wallet') {
+      chosen_icon.name = icon;
+      $ionicHistory.goBack();
+    } else if($ionicHistory.backView().stateName === 'inside.wallet_detail') {
+      WalletService.changeWalletIcon($ionicHistory.backView().stateParams.walletId, icon).then(function() {
+        $ionicHistory.goBack();
+      });
+    }
   };
 })
 
@@ -291,12 +317,6 @@ alert(text);
     walletId: 0
   };
 
-  $scope.data = {
-    amount: null,
-    cents: null,
-    showUndo: false
-  };
-
   $scope.max = $scope.wallet.budget;
   $scope.current = $scope.wallet.spent;
 
@@ -306,21 +326,77 @@ alert(text);
     });
   };
 
-  var update = function() {
+  $scope.changeName = function() {
+    var popup = $ionicPopup.show({
+      template: '<input type="text" ng-model="data.newName" autofocus>',
+      title: 'Enter new wallet name',
+      scope: $scope,
+      buttons: [
+        { text: 'Cancel' },
+        {
+          text: '<b>Save</b>',
+          type: 'button-calm',
+          onTap: function(e) {
+            if (!$scope.data.newName) {
+              e.preventDefault();
+            } else {
+              return $scope.data.newName;
+            }
+          }
+        }
+      ]
+    });
+
+    popup.then(function(name) {
+      if(name) {
+        WalletService.changeWalletName($scope.wallet.walletId, name).then(function() {
+          update();
+        });
+      }
+    });
+  };
+
+  $scope.changeSize = function() {
+    var popup = $ionicPopup.show({
+      template: '<input type="text" ng-model="data.newSize" autofocus>',
+      title: 'Enter new wallet size',
+      scope: $scope,
+      buttons: [
+        { text: 'Cancel' },
+        {
+          text: '<b>Save</b>',
+          type: 'button-calm',
+          onTap: function(e) {
+            if (!$scope.data.newSize) {
+              e.preventDefault();
+            } else {
+              return $scope.data.newSize;
+            }
+          }
+        }
+      ]
+    });
+
+    popup.then(function(size) {
+      if(size) {
+        WalletService.changeWalletSize($scope.wallet.walletId, size).then(function() {
+          update();
+        });
+      }
+    });
+  };
+
+  var update = function(updatedIcon) {
     WalletService.findOne($stateParams.walletId).then(function(result) {
       var show = result.lastTransaction > 0;
-
       $scope.wallet = result;
+
       $scope.data = {
         amount: null,
         cents: null,
         showUndo: show
       };
-
-      console.log($scope.data.showUndo);
     });
-
-
   };
 
   $scope.newTransaction = function() {
@@ -331,8 +407,6 @@ alert(text);
     if(!transaction.cents) transaction = transaction.amount;
     else if(!transaction.amount) transaction = transaction.cents / 100;
     else transaction = transaction.amount + (transaction.cents / 100);
-
-    console.log(transaction);
 
     WalletService.addTransaction($scope.wallet.walletId, transaction).then(function() {
       update();

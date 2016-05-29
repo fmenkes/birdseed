@@ -186,7 +186,6 @@ angular.module('client')
   };
 
   this.insertFirstTimestamp = function(userId) {
-    //debugger;
     var query = 'INSERT INTO timeStamps (timeStamp, user) ' +
     'SELECT ?, ? ' +
     'WHERE NOT EXISTS(SELECT * FROM timeStamps WHERE user = ?)';
@@ -253,6 +252,39 @@ angular.module('client')
   var deleteWallet = function(id) {
     var query = 'DELETE FROM wallets WHERE walletId=?';
     var args = [id];
+
+    return DB.query(query, args).then(function() {
+
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var changeWalletName = function(id, name) {
+    var query = 'UPDATE wallets SET name = ? WHERE walletId = ?';
+    var args = [name, id];
+
+    return DB.query(query, args).then(function() {
+
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var changeWalletIcon = function(id, icon) {
+    var query = 'UPDATE wallets SET icon = ? WHERE walletId = ?';
+    var args = [icon, id];
+
+    return DB.query(query, args).then(function() {
+
+    }, function(err) {
+      console.log(err.message);
+    });
+  };
+
+  var changeWalletSize = function(id, budget) {
+    var query = 'UPDATE wallets SET budget = ? WHERE walletId = ?';
+    var args = [budget, id];
 
     return DB.query(query, args).then(function() {
 
@@ -357,6 +389,9 @@ angular.module('client')
   return {
     insert: insertWallet,
     delete: deleteWallet,
+    changeWalletName: changeWalletName,
+    changeWalletIcon: changeWalletIcon,
+    changeWalletSize: changeWalletSize,
     find: getAllWallets,
     findOne: getWallet,
     emptyWallets: emptyWallets,
