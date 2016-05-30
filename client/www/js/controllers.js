@@ -1,20 +1,32 @@
 angular.module('client')
 
-.controller('LoginCtrl', function($scope, AuthService, $ionicPopup, $ionicHistory, $state) {
+.controller('LoginCtrl', function($scope, AuthService, $ionicPopup, $ionicLoading, $ionicHistory, $state) {
   $scope.user = {
     username: '',
     email: '',
     password: ''
   };
 
+  $scope.showLogo = true;
+
+  $scope.hideLogo = function() {
+    $scope.showLogo = false;
+  };
+
   $scope.login = function() {
+    $ionicLoading.show({
+      template: "Logging you in..."
+    });
+
     AuthService.login($scope.user).then(function(msg) {
+      $ionicLoading.hide();
       $ionicHistory.nextViewOptions({
         disableBack: true,
         disableAnimate: true
       });
       $state.go('inside.main');
     }, function(errMsg) {
+      $ionicLoading.hide();
       var alertPopup = $ionicPopup.alert({
         title: 'Login failed',
         template: errMsg
@@ -64,29 +76,25 @@ angular.module('client')
     $ionicSideMenuDelegate.toggleRight();
   };
 
-  $scope.changeName = function($event) {
-    console.log($scope);
-    console.log($state.current.name);
-    console.log("Inside Ctrl " + $event.target.className);
-  };
-
   $scope.user = user;
 
   $scope.getUser = function() {
+    console.log("getting user");
     Auth.getUser(user.id).then(function(result) {
       $scope.user.income = result.income;
       $scope.user.savings = result.savings;
+      $scope.user.total = result.total;
     });
   };
 
   $scope.getUser();
 })
 
-.controller('MainCtrl', function($scope, DB, Auth, WalletService, MonthlyService, TrophyService) {
+.controller('MainCtrl', function($scope, $ionicPopup, DB, Auth, WalletService, MonthlyService, TrophyService) {
   $scope.$on('$ionicView.beforeEnter', function() {
     $scope.getUser();
 
-    $scope.showTransaction = false;
+    $scope.showTransaction = true;
 
     WalletService.find().then(function(result) {
       $scope.showTransaction = result.length > 0;
@@ -98,9 +106,7 @@ angular.module('client')
     cents: null
   };
 
-  var update = $scope.$parent.update;
-
-  $scope.saveIncome = function() {
+  /*$scope.saveIncome = function() {
     var transaction = $scope.data;
 
     if(!transaction.amount && !transaction.cents) return;
@@ -117,7 +123,7 @@ angular.module('client')
         cents: null
       };
     });
-  };
+  };*/
 
   $scope.updateIncome = function() {
     Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
@@ -166,43 +172,7 @@ angular.module('client')
     });
   };
 })
-
-.controller('OCRCtrl', function($scope, $q, $cordovaCamera) {
-  /*var getImage = function() {
-  var deferred = $q.defer();
-
-  var options = {
-  quality: 100,
-  destinationType: Camera.DestinationType.DATA_URL,
-  sourceType: Camera.PictureSourceType.CAMERA,
-  allowEdit: true,
-  encodingType: Camera.EncodingType.JPEG,
-  popoverOptions: CameraPopoverOptions,
-  saveToPhotoAlbum: false,
-  correctOrientation:true
-};
-
-$cordovaCamera.getPicture(options).then(function(imageData) {
-var image = document.getElementById('ocrImg');
-image.src = "data:image/jpeg;base64," + imageData;
-deferred.resolve(image);
-}, function(err) {
-deferred.reject(err.message);
-});
-
-return deferred.promise;
-};
-
-$scope.testOCR = function() {
-getImage().then(function(image) {
-OCRAD(image, function(text) {
-console.log(text);
-alert(text);
-});
-});
-};*/
-})
-
+/*
 .controller('IncomeCtrl', function($scope, Auth, $ionicHistory, $ionicPopup, $state, TrophyService) {
   $scope.updateIncome = function() {
     Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
@@ -222,24 +192,28 @@ alert(text);
       $state.go('inside.main');
     });
   };
-})
+})*/
 
-.controller('WalletsCtrl', function($scope, WalletService, API_ENDPOINT) {
+.controller('WalletsCtrl', function($scope, WalletService, Auth, API_ENDPOINT) {
   $scope.wallets = [];
+  $scope.data = {};
 
-  $scope.deleteWallets = function() {
-    WalletService.deleteAll().then(function() {
-      update();
-    });
-  };
+  $scope.$on('$ionicView.beforeEnter', function() {
+    update();
+  });
 
   var update = function() {
     WalletService.find().then(function(wallets) {
       $scope.wallets = wallets;
+      WalletService.getTotal().then(function(result) {
+        if(result) {
+          $scope.data.total = result;
+        } else {
+          $scope.data.total = 0;
+        }
+      });
     });
   };
-
-  update();
 })
 
 .controller('NewWalletCtrl', function($scope, $state, chosen_icon, $ionicHistory, $ionicPopup, WalletService, TrophyService) {
@@ -259,8 +233,6 @@ alert(text);
     if(!name || !budget) return;
 
     WalletService.insert(name, budget, icon).then(function(wallets) {
-      console.log(wallets);
-
       if(wallets === 1) {
         // TrophyService returns a resolved promise if it finds the trophy, otherwise
         // returns a rejected promise.
@@ -358,7 +330,7 @@ alert(text);
 
   $scope.changeSize = function() {
     var popup = $ionicPopup.show({
-      template: '<input type="text" ng-model="data.newSize" autofocus>',
+      template: '<input type="number" ng-model="data.newSize" autofocus>',
       title: 'Enter new wallet size',
       scope: $scope,
       buttons: [

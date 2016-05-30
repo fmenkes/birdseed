@@ -22,6 +22,7 @@ angular.module('client')
     'username TEXT, ' +
     'savings DECIMAL(18,2) DEFAULT 0, ' +
     'income DECIMAL(18,2) DEFAULT 0, ' +
+    'total DECIMAL(18, 2) DEFAULT 0, ' +
     'wallets INTEGER DEFAULT 0)';
 
     var tokenQuery = 'CREATE TABLE IF NOT EXISTS tokens ' +
@@ -235,17 +236,18 @@ angular.module('client')
   return this;
 })
 
-.service('AccountService', function(DB, user) {
-
-})
-
 .service('WalletService', function($q, DB, Auth, TrophyService, $ionicPopup, user) {
   var insertWallet = function(name, budget, icon) {
     var query = 'INSERT INTO wallets (name, budget, icon, spent, user) VALUES (?, ?, ?, ?, ?)';
     var args = [name, budget, icon, 0, user.id];
 
-    return DB.query(query, args).then(function(result) {
-      return result.insertId;
+    return DB.query(query, args).then(function() {
+      var walletQuery = 'SELECT * FROM wallets WHERE user = ?';
+      var walletArgs = [user.id];
+
+      return DB.query(walletQuery, walletArgs).then(function(result) {
+        return result.rows.length;
+      });
     });
   };
 
@@ -386,6 +388,17 @@ angular.module('client')
     });
   };
 
+  var getWalletTotal = function() {
+    var query = 'SELECT SUM(budget) FROM wallets WHERE user = ?';
+    var args = [user.id];
+
+    return DB.query(query, args).then(function(result) {
+      return result.rows.item(0)['SUM(budget)'];
+    }, function(err) {
+      console.log("Error: " + err.message);
+    });
+  };
+
   return {
     insert: insertWallet,
     delete: deleteWallet,
@@ -394,6 +407,7 @@ angular.module('client')
     changeWalletSize: changeWalletSize,
     find: getAllWallets,
     findOne: getWallet,
+    getTotal: getWalletTotal,
     emptyWallets: emptyWallets,
     deleteAll: deleteAllWallets,
     addTransaction: addTransaction,
@@ -570,6 +584,8 @@ angular.module('client')
   }
 
   function useCredentials(userId, token) {
+    var deferred = $q.defer();
+
     isAuthenticated = true;
     authToken = token;
     user.id = userId;
@@ -577,16 +593,23 @@ angular.module('client')
     // Set token as default header
     $http.defaults.headers.common.Authorization = authToken;
 
-    return Auth.insertFirstTimestamp(userId).then(function() {
+    Auth.insertFirstTimestamp(userId).then(function() {
       MonthlyService.checkDate().then(function() {
         TrophyService.giveTrophy('firstMonth').then(function(desc) {
           $ionicPopup.alert({
             title: "New trophy!",
             template: "<p>" + desc + "</p>"
           });
+          deferred.resolve();
+        }, function() {
+          deferred.resolve();
         });
+      }, function() {
+        deferred.resolve();
       });
     });
+
+    return deferred.promise;
   }
 
   function destroyUserCredentials() {
@@ -597,6 +620,22 @@ angular.module('client')
   }
 
   var loadUserCredentials = function() {
+    var deferred = $q.defer();
+
+    Auth.findToken().then(function(token) {
+      if(token) {
+        useCredentials(token.user, token.token).then(function() {
+          deferred.resolve("User Authenticated");
+        }, function() {
+          deferred.reject();
+        });
+      } else {
+        deferred.reject();
+      }
+    });
+
+    return deferred.promise;
+    /*
     return $q(function(resolve, reject) {
       Auth.findToken().then(function(token) {
         if(token) {
@@ -607,7 +646,7 @@ angular.module('client')
           reject();
         }
       });
-    });
+    });*/
   };
 
   // TODO: check if user is online

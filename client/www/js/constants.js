@@ -64,13 +64,18 @@ angular.module('client')
     desc: "You reached a wallet limit! Just try not to go over!"
   },
   { name: 'setIncome',
-    plainName: 'Set your income',
-    desc: 'You set your monthly income! Make sure you update it when you get a raise!'
+    plainName: 'Update your finances',
+    desc: 'You your income and/or account info! Make sure you update it when you get a raise!'
   },
   {
     name: 'firstMonth',
     plainName: 'Your first month',
     desc: 'You made it to the end of the first month!'
+  },
+  {
+    name: 'threeMonths',
+    plainName: 'Three months and going',
+    desc: "You've been using BudgetBuddy for three months! Wow!"
   }
 ])
 

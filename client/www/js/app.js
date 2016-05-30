@@ -1,7 +1,7 @@
 // Angular app
 angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar'])
 
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
   $stateProvider
   // Loading page.
   .state('home', {
@@ -72,14 +72,11 @@ angular.module('client', ['ionic', 'ngCordova', 'angular-svg-round-progressbar']
     url: '/transaction',
     templateUrl: 'templates/transaction.html',
     controller: 'TransactionCtrl'
-  })
-  .state('inside.ocr', {
-    url: '/ocr',
-    templateUrl: 'templates/ocr.html',
-    controller: 'OCRCtrl'
   });
 
   $urlRouterProvider.otherwise('/home');
+
+  $ionicConfigProvider.backButton.previousTitleText(true);
 })
 
 .run(function($ionicPlatform,
