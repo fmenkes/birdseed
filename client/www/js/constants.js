@@ -65,7 +65,7 @@ angular.module('client')
   },
   { name: 'setIncome',
     plainName: 'Update your finances',
-    desc: 'You your income and/or account info! Make sure you update it when you get a raise!'
+    desc: 'You entered your income and/or account info! Make sure you update it when you get a raise!'
   },
   {
     name: 'firstMonth',

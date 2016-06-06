@@ -657,8 +657,17 @@ angular.module('client')
         if(result.data.success) {
           resolve(result.data.msg);
         } else {
-          console.log(result.data);
-          reject(result.data.msg);
+          var message = '';
+          if(result.data.msg.search(/E11000 duplicate key error index: 1dv430.users.\$username/) != -1) {
+            message = 'Username already in use.';
+          } else if(result.data.msg.search(/E11000 duplicate key error index: 1dv430.users.\$email/) != -1) {
+            message = 'Email already in use.';
+          } else if(result.data.msg == 'User validation failed') {
+            message = 'Please enter a valid email.';
+          } else {
+            message = result.data.msg;
+          }
+          reject(message);
         }
       });
     });

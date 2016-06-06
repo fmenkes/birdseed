@@ -12,7 +12,7 @@
       Create new Wallet
     </button>
     <ul class="list">
-      <div ng-repeat="wallet in wallets">
+      <div class="wallet-info" ng-repeat="wallet in wallets">
         <li class="item" ui-sref="inside.wallet_detail({walletId: wallet.walletId})" >
           <img ng-if="wallet.icon" class="wallet-img" ng-src="img/wallet_icons/{{ wallet.icon }}.png"/> <span class="wallet-span">{{ wallet.name }}: {{ wallet.spent | numberFormat }}/{{ wallet.budget }}</span>
         </li>

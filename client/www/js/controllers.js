@@ -106,25 +106,6 @@ angular.module('client')
     cents: null
   };
 
-  /*$scope.saveIncome = function() {
-    var transaction = $scope.data;
-
-    if(!transaction.amount && !transaction.cents) return;
-
-    if(!transaction.cents) transaction = transaction.amount;
-    else if(!transaction.amount) transaction = transaction.cents / 100;
-    else transaction = transaction.amount + (transaction.cents / 100);
-
-    $scope.user.savings += transaction;
-
-    Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
-      $scope.data = {
-        amount: null,
-        cents: null
-      };
-    });
-  };*/
-
   $scope.updateIncome = function() {
     Auth.updateFinance($scope.user.id, $scope.user.income, $scope.user.savings).then(function() {
       TrophyService.giveTrophy("setIncome").then(function(desc) {

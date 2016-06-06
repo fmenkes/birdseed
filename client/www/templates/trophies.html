@@ -1,8 +1,5 @@
 <ion-view title="Trophy Cabinet">
   <ion-content class="padding">
-    <button class="button button-calm button-block" ng-click="deleteTrophies()">
-      Delete all Trophies
-    </button>
     <div class="trophies row" style="display: -webkit-flex; -webkit-flex-wrap: wrap; display: flex; flex-wrap: wrap;" ng-if="trophies.length > 0">
       <div class="icon-item col col-20" ng-repeat="trophy in trophies" ng-click="showPopup(trophy)">
         <img ng-src="img/trophy_icons/{{ trophy.name }}.png"/>
